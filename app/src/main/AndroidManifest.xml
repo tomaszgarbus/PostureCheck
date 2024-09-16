@@ -2,7 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-  <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
   <application
       android:allowBackup="true"
       android:dataExtractionRules="@xml/data_extraction_rules"
@@ -14,9 +15,19 @@
       android:theme="@style/Theme.PostureCheck"
       tools:targetApi="31">
     <service
-        android:name=".NotificationService"
+        android:name=".RecomputeNextNotificationsService"
         android:enabled="true"
         android:exported="true"></service>
+
+    <receiver
+        android:name=".NotificationAlarmBroadcastReceiver"
+        android:enabled="true"
+        android:exported="true" />
+
+    <service
+        android:name=".NotificationService"
+        android:enabled="true"
+        android:exported="true" />
 
     <activity
         android:name=".MainActivity"
