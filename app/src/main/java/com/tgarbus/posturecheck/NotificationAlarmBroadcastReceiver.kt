@@ -38,11 +38,13 @@ class NotificationAlarmBroadcastReceiver : BroadcastReceiver() {
     notificationManager.createNotificationChannel(channel)
   }
 
-  private fun buildPendingIntentForReply(reply: PostureCheckReply, plannedPostureCheck: PlannedPostureCheck, context: Context): PendingIntent {
-    val baseIntent = Intent(context, NotificationResponseBroadcastReceiver::class.java)
+  private fun buildPendingIntentForReply(
+    reply: PostureCheckReply, plannedPostureCheck: PlannedPostureCheck,
+    context: Context): PendingIntent {
+    val baseIntent = Intent(context, NotificationResponseService::class.java)
     return baseIntent.let { intent ->
       intent.putExtras(plannedPostureCheck.withReply(reply).toBundle())
-      PendingIntent.getBroadcast(context, 0, intent, 0)
+      PendingIntent.getService(context, 0, intent, 0)
     }
   }
 
@@ -55,6 +57,7 @@ class NotificationAlarmBroadcastReceiver : BroadcastReceiver() {
     Log.i("tomek", "stworzylem kanał")
 
     val plannedPostureCheck = PlannedPostureCheck.fromBundle(intent.extras!!)
+    Log.i("tomek:", plannedPostureCheck.toString())
 
     val builder = NotificationCompat.Builder(context, NotificationConstants.channelId)
       .setSmallIcon(R.drawable.ic_launcher_foreground)
@@ -84,7 +87,8 @@ class NotificationAlarmBroadcastReceiver : BroadcastReceiver() {
       }
       Log.i("tomek", "zawiadamiam")
       // notificationId is a unique int for each notification that you must define.
-      notify((System.currentTimeMillis() / 1000).toInt(), builder.build())
+      val notificationId = (plannedPostureCheck.millis / 1000).toInt()
+      notify(notificationId, builder.build())
       context.startService(Intent(context, RecomputeNextNotificationsService::class.java))
     }
   }

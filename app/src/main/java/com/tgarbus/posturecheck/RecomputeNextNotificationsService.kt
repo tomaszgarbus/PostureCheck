@@ -8,9 +8,20 @@ import android.os.IBinder
 import android.util.Log
 import com.tgarbus.posturecheck.data.PlannedChecksRepository
 import com.tgarbus.posturecheck.data.PlannedPostureCheck
+import com.tgarbus.posturecheck.data.TimeOfDay
 import java.util.UUID
 
 class RecomputeNextNotificationsService : Service() {
+
+  private fun recomputeNextNotifications(
+    daysAhead: Int = 5,
+    notificationsPerDay: Int = 3,
+    minTime: TimeOfDay = TimeOfDay(8, 0),
+    maxTime: TimeOfDay = TimeOfDay(21, 0)
+    // TODO: max time
+  ): HashSet<PlannedPostureCheck> {
+
+  }
 
   override fun onCreate() {
     super.onCreate()
@@ -22,7 +33,6 @@ class RecomputeNextNotificationsService : Service() {
     )
     // TODO: Create the planned check in repo. This requires creating a view model.
     val alarmIntent = Intent(baseContext, NotificationAlarmBroadcastReceiver::class.java).let { intent ->
-      // TODO: Put the planned check here.
       intent.putExtras(plannedPostureCheck.toBundle())
       PendingIntent.getBroadcast(baseContext, 0, intent, 0)
     }

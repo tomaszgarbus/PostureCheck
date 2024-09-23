@@ -51,6 +51,13 @@ data class PastPostureCheck (
     return bundle
   }
 
+  fun withoutReply(): PlannedPostureCheck {
+    return PlannedPostureCheck(
+      id = this.id,
+      millis = this.millis
+    )
+  }
+
   companion object {
     fun fromBundle(bundle: Bundle): PastPostureCheck {
       return PastPostureCheck(
@@ -61,3 +68,8 @@ data class PastPostureCheck (
     }
   }
 }
+
+data class TimeOfDay(
+  val hour: Int,
+  val minute: Int
+)
