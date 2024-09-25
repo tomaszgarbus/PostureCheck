@@ -33,10 +33,11 @@ class NotificationResponseService : Service() {
       pastChecksRepo.addPastCheck(pastCheck)
       plannedChecksRepo.deletePlannedCheck(plannedCheck)
       Log.i("tomek", "Recorded response")
+      stopSelf(startId)
     }
     val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
     notificationManager.cancel(pastCheck.notificationId())
-    return result
+    return START_REDELIVER_INTENT
   }
 
   override fun onBind(intent: Intent): IBinder? {

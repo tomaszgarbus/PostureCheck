@@ -83,7 +83,7 @@ class NotificationAlarmBroadcastReceiver : BroadcastReceiver() {
       Log.i("tomek", "zawiadamiam")
       // notificationId is a unique int for each notification that you must define.
       notify(plannedPostureCheck.notificationId(), builder.build())
-      context.startService(Intent(context, RecomputeNextNotificationsService::class.java))
+      context.sendBroadcast(Intent(context, RecomputeNextNotificationsBroadcastReceiver::class.java))
     }
   }
 }

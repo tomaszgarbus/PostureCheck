@@ -36,8 +36,8 @@ class MainActivity : ComponentActivity() {
         }
       }
     }
-    val intent = Intent(baseContext, RecomputeNextNotificationsService::class.java)
-    startService(intent)
+    val intent = Intent(baseContext, RecomputeNextNotificationsBroadcastReceiver::class.java)
+    sendBroadcast(intent)
   }
 }
 
