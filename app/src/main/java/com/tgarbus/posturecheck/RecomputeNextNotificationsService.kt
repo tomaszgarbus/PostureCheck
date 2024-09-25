@@ -20,7 +20,7 @@ class RecomputeNextNotificationsService : Service() {
     maxTime: TimeOfDay = TimeOfDay(21, 0)
     // TODO: max time
   ): HashSet<PlannedPostureCheck> {
-
+    return HashSet()
   }
 
   override fun onCreate() {
@@ -31,10 +31,11 @@ class RecomputeNextNotificationsService : Service() {
       id = UUID.randomUUID().toString(),
       millis = System.currentTimeMillis() + 10000
     )
+    Log.i("tomek", "RecomputeNextNotificationsService: plannedPostureCheck: " + plannedPostureCheck.toString())
     // TODO: Create the planned check in repo. This requires creating a view model.
     val alarmIntent = Intent(baseContext, NotificationAlarmBroadcastReceiver::class.java).let { intent ->
       intent.putExtras(plannedPostureCheck.toBundle())
-      PendingIntent.getBroadcast(baseContext, 0, intent, 0)
+      PendingIntent.getBroadcast(baseContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
     }
     a.set(
       AlarmManager.RTC_WAKEUP,

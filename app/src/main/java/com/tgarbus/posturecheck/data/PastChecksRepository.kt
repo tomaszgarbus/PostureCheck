@@ -51,6 +51,7 @@ class PastChecksRepository(private val context: Context) {
       preferences[millisKey(pastPostureCheck.id)] = pastPostureCheck.millis
       preferences[replyKey(pastPostureCheck.id)] = pastPostureCheck.reply.name
       addIdToList(pastPostureCheck.id, preferences)
+      Log.i("tomek", preferences.toString())
     }
   }
 }

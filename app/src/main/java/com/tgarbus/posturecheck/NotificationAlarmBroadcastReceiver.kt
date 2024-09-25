@@ -44,20 +44,15 @@ class NotificationAlarmBroadcastReceiver : BroadcastReceiver() {
     val baseIntent = Intent(context, NotificationResponseService::class.java)
     return baseIntent.let { intent ->
       intent.putExtras(plannedPostureCheck.withReply(reply).toBundle())
-      PendingIntent.getService(context, 0, intent, 0)
+      PendingIntent.getService(context, reply.ordinal, intent, PendingIntent.FLAG_UPDATE_CURRENT)
     }
   }
 
   override fun onReceive(context: Context, intent: Intent) {
-    // This method is called when the BroadcastReceiver is receiving an Intent broadcast.
-    // TODO("AlarmBroadcastReceiver.onReceive() is not implemented")
-    Log.i("tomek", "odebrałem broadcast")
-
     createNotificationChannel(context)
-    Log.i("tomek", "stworzylem kanał")
 
     val plannedPostureCheck = PlannedPostureCheck.fromBundle(intent.extras!!)
-    Log.i("tomek:", plannedPostureCheck.toString())
+    Log.i("tomek", "NotificationAlarmBroadcastReceiver: PlannedPostureCheck: " + plannedPostureCheck.toString())
 
     val builder = NotificationCompat.Builder(context, NotificationConstants.channelId)
       .setSmallIcon(R.drawable.ic_launcher_foreground)
@@ -87,8 +82,7 @@ class NotificationAlarmBroadcastReceiver : BroadcastReceiver() {
       }
       Log.i("tomek", "zawiadamiam")
       // notificationId is a unique int for each notification that you must define.
-      val notificationId = (plannedPostureCheck.millis / 1000).toInt()
-      notify(notificationId, builder.build())
+      notify(plannedPostureCheck.notificationId(), builder.build())
       context.startService(Intent(context, RecomputeNextNotificationsService::class.java))
     }
   }

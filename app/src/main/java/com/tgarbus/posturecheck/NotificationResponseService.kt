@@ -1,18 +1,17 @@
 package com.tgarbus.posturecheck
 
+import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
-import androidx.lifecycle.LifecycleCoroutineScope
 import com.tgarbus.posturecheck.data.PastChecksRepository
 import com.tgarbus.posturecheck.data.PastPostureCheck
 import com.tgarbus.posturecheck.data.PlannedChecksRepository
-import com.tgarbus.posturecheck.data.PlannedPostureCheck
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+
 
 class NotificationResponseService : Service() {
   private val job = SupervisorJob()
@@ -23,10 +22,10 @@ class NotificationResponseService : Service() {
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-    Log.i("tomek", "NotificationResponseService::onStartCommand")
     val result = super.onStartCommand(intent, flags, startId)
     val context = this
     val pastCheck: PastPostureCheck = PastPostureCheck.fromBundle(intent!!.extras!!)
+    Log.i("tomek", "NotificationResponseService: pastCheck: " + pastCheck.toString())
     scope.launch {
       val plannedChecksRepo = PlannedChecksRepository(context)
       val pastChecksRepo = PastChecksRepository(context)
@@ -35,6 +34,8 @@ class NotificationResponseService : Service() {
       plannedChecksRepo.deletePlannedCheck(plannedCheck)
       Log.i("tomek", "Recorded response")
     }
+    val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+    notificationManager.cancel(pastCheck.notificationId())
     return result
   }
 

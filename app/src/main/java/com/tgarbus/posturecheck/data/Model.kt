@@ -21,6 +21,10 @@ data class PlannedPostureCheck (
     )
   }
 
+  fun notificationId(): Int {
+    return (millis / 1000).toInt()
+  }
+
   companion object {
     fun fromBundle(bundle: Bundle): PlannedPostureCheck {
       return PlannedPostureCheck(
@@ -56,6 +60,10 @@ data class PastPostureCheck (
       id = this.id,
       millis = this.millis
     )
+  }
+
+  fun notificationId(): Int {
+    return (millis / 1000).toInt()
   }
 
   companion object {
