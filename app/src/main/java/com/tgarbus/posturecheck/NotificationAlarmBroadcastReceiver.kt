@@ -44,7 +44,9 @@ class NotificationAlarmBroadcastReceiver : BroadcastReceiver() {
     val baseIntent = Intent(context, NotificationResponseService::class.java)
     return baseIntent.let { intent ->
       intent.putExtras(plannedPostureCheck.withReply(reply).toBundle())
-      PendingIntent.getService(context, reply.ordinal, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+      // TODO: Rewrite construction of request code to make it clear there can be no collision.
+      val requestCode = plannedPostureCheck.notificationId() + reply.ordinal
+      PendingIntent.getService(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT)
     }
   }
 
@@ -57,7 +59,7 @@ class NotificationAlarmBroadcastReceiver : BroadcastReceiver() {
     val builder = NotificationCompat.Builder(context, NotificationConstants.channelId)
       .setSmallIcon(R.drawable.ic_launcher_foreground)
       .setContentTitle("jaka postawa wariacie?")
-      .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+      .setPriority(NotificationCompat.PRIORITY_MAX)
       .addAction(R.drawable.ic_launcher_foreground, "Good", buildPendingIntentForReply(
         PostureCheckReply.GOOD, plannedPostureCheck, context))
       .addAction(R.drawable.ic_launcher_foreground, "Bad", buildPendingIntentForReply(

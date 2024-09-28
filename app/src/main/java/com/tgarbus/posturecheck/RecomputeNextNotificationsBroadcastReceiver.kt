@@ -10,7 +10,9 @@ import android.util.Log
 import com.tgarbus.posturecheck.data.PlannedPostureCheck
 import com.tgarbus.posturecheck.data.TimeOfDay
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch.
 import java.util.UUID
 
 class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
@@ -24,10 +26,17 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
         maxTime: TimeOfDay = TimeOfDay(21, 0)
         // TODO: max time
     ): HashSet<PlannedPostureCheck> {
+        val today =
         return HashSet()
     }
 
     override fun onReceive(context: Context, intent: Intent) {
+        val pendingResult = goAsync()
+        GlobalScope.launch {
+
+        }
+
+        // Scheduling alarm.
         val a: AlarmManager = context.getSystemService(Service.ALARM_SERVICE) as AlarmManager
         Log.i("tomek", "building intent")
         val plannedPostureCheck = PlannedPostureCheck(
