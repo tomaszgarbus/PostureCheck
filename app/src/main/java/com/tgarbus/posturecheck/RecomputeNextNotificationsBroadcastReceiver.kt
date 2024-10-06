@@ -13,14 +13,42 @@ import com.tgarbus.posturecheck.data.TimeOfDay
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.runBlocking
+import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
 import java.util.UUID
 
 class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
     private val job = SupervisorJob()
     private val scope = CoroutineScope(job)
 
+    private fun validateNotificationsForDay(
+        notifications: Set<PlannedPostureCheck>,
+        notificationsPerDay: Int = 3,
+        minTime: TimeOfDay = TimeOfDay(8, 0),
+        maxTime: TimeOfDay = TimeOfDay(21, 0)
+    ): Boolean {
+        // Validate number of notifications.
+        if (notifications.size != notificationsPerDay) {
+            return false
+        }
+
+        // Validate min time.
+        val earliestTime = notifications.minBy { it.getTimeOfDay() }.getTimeOfDay()
+        if (earliestTime < minTime) {
+            return false
+        }
+
+        // Validate max time.
+        val latestTime = notifications.maxBy { it.getTimeOfDay() }.getTimeOfDay()
+        if (latestTime > maxTime) {
+            return false
+        }
+
+        return true
+    }
+
+    // TODO: handle different locale
+    // TOOD: recompute if user extended min and max time frame
     private fun recomputeNextNotifications(
         nextNotifications: Set<PlannedPostureCheck>,
         daysAhead: Int = 5,
@@ -31,6 +59,24 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
     ): Set<PlannedPostureCheck> {
         val calendar: Calendar = Calendar.getInstance()
         calendar.timeInMillis = System.currentTimeMillis()
+
+        // Set up formatter.
+        val sdf: SimpleDateFormat = SimpleDateFormat("dd-MM-yyyy")
+        sdf.timeZone = calendar.getTimeZone()
+
+        // First group notifications per day for the upcoming days.
+        val groupedByDay = HashMap<String, HashSet<PlannedPostureCheck>>()
+        for (plannedCheck in nextNotifications) {
+            groupedByDay.getOrDefault(plannedCheck.formatDate(sdf), HashSet()).add(plannedCheck)
+        }
+
+        // Recompute days which have wrong number of notifications or don't comply with
+        // preferred times.
+        for (val i = 0.)
+
+        // Finally flatten the grouped notifications into a hashset.
+
+
         return HashSet()
     }
 

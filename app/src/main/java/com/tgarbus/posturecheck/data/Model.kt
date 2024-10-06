@@ -1,6 +1,8 @@
 package com.tgarbus.posturecheck.data
 
 import android.os.Bundle
+import java.text.SimpleDateFormat
+import java.util.Calendar
 
 data class PlannedPostureCheck (
   val id: String,
@@ -23,6 +25,16 @@ data class PlannedPostureCheck (
 
   fun notificationId(): Int {
     return (millis / 1000).toInt()
+  }
+
+  fun formatDate(sdf: SimpleDateFormat): String {
+    val calendar = Calendar.getInstance()
+    calendar.timeInMillis = this.millis
+    return sdf.format(calendar)
+  }
+
+  fun getTimeOfDay(): TimeOfDay {
+    return TimeOfDay.fromMillis(this.millis)
   }
 
   companion object {
@@ -80,4 +92,19 @@ data class PastPostureCheck (
 data class TimeOfDay(
   val hour: Int,
   val minute: Int
-)
+): Comparable<TimeOfDay> {
+  override fun compareTo(other: TimeOfDay): Int {
+    return compareValuesBy(this, other, { it.hour }, { it.minute })
+  }
+
+  companion object {
+    fun fromMillis(millis: Long): TimeOfDay {
+      val calendar = Calendar.getInstance()
+      calendar.timeInMillis = millis
+      return TimeOfDay(
+        calendar.get(Calendar.HOUR_OF_DAY),
+        calendar.get(Calendar.MINUTE)
+      )
+    }
+  }
+}
