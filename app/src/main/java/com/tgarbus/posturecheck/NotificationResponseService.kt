@@ -22,7 +22,7 @@ class NotificationResponseService : Service() {
   }
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-    val result = super.onStartCommand(intent, flags, startId)
+    super.onStartCommand(intent, flags, startId)
     val context = this
     val pastCheck: PastPostureCheck = PastPostureCheck.fromBundle(intent!!.extras!!)
     Log.i("tomek", "NotificationResponseService: pastCheck: " + pastCheck.toString())

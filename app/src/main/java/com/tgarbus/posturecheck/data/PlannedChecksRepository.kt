@@ -12,6 +12,7 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 val Context.plannedChecksDataStore: DataStore<Preferences> by preferencesDataStore("PlannedChecks")
@@ -37,6 +38,10 @@ class PlannedChecksRepository(private val context: Context) {
       Log.i("tomek", plannedChecks.toString())
       plannedChecks
     }
+  }
+
+  suspend fun getPlannedChecks(): Set<PlannedPostureCheck> {
+    return getPlannedChecksAsFlow().first()
   }
 
   private fun addIdToList(id: String, preferences: MutablePreferences) {
