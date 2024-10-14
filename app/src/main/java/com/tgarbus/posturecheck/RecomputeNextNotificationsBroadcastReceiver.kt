@@ -16,6 +16,7 @@ import kotlinx.coroutines.runBlocking
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.UUID
+import kotlin.random.Random.Default.nextInt
 
 class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
     private val job = SupervisorJob()
@@ -23,9 +24,9 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
 
     private fun validateNotificationsForDay(
         notifications: Set<PlannedPostureCheck>,
-        notificationsPerDay: Int = 3,
-        minTime: TimeOfDay = TimeOfDay(8, 0),
-        maxTime: TimeOfDay = TimeOfDay(21, 0)
+        notificationsPerDay: Int,
+        minTime: TimeOfDay,
+        maxTime: TimeOfDay
     ): Boolean {
         // Validate number of notifications.
         if (notifications.size != notificationsPerDay) {
@@ -45,6 +46,26 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
         }
 
         return true
+    }
+
+    private fun recomputeNotificationsForDay(
+        notificationsPerDay: Int,
+        getDayFrom: Calendar,
+        minTime: TimeOfDay,
+        maxTime: TimeOfDay): HashSet<PlannedPostureCheck> {
+        val checks = HashSet<PlannedPostureCheck>()
+        val range = minTime.rangeTo(maxTime)
+        val cal = Calendar.getInstance()
+        cal.timeInMillis = getDayFrom.timeInMillis
+        for (i in 1..notificationsPerDay) {
+            // TODO: prevent duplicates or too close checks.
+            val timeOfDay = range[nextInt(0, range.size)]
+            cal.set(Calendar.HOUR_OF_DAY, timeOfDay.hour)
+            cal.set(Calendar.MINUTE, timeOfDay.minute)
+            val check = PlannedPostureCheck(millis = cal.timeInMillis)
+            checks.add(check)
+        }
+        return checks
     }
 
     // TODO: handle different locale
@@ -72,18 +93,31 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
 
         // Recompute days which have wrong number of notifications or don't comply with
         // preferred times.
-        for (val i = 0.)
+        for (i in 1..daysAhead) {
+            calendar.add(Calendar.DATE, 1)
+            val dayStr = sdf.format(calendar.time)
+            if (!validateNotificationsForDay(groupedByDay.getOrDefault(dayStr, HashSet()),
+                notificationsPerDay, minTime, maxTime)) {
+                groupedByDay[dayStr] =
+                    recomputeNotificationsForDay(notificationsPerDay, calendar, minTime, maxTime)
+            }
+        }
 
         // Finally flatten the grouped notifications into a hashset.
+        val recomputedNotifications = HashSet<PlannedPostureCheck>()
+        for (day in groupedByDay) {
+            recomputedNotifications.addAll(groupedByDay.getOrDefault(day, HashSet()))
+        }
 
-
-        return HashSet()
+        return recomputedNotifications
     }
 
     private fun scheduleAlarm(context: Context, plannedPostureCheck: PlannedPostureCheck) {
         val a: AlarmManager = context.getSystemService(Service.ALARM_SERVICE) as AlarmManager
         Log.i("tomek", "building intent")
-        Log.i("tomek", "RecomputeNextNotificationsService: plannedPostureCheck: " + plannedPostureCheck.toString())
+        Log.i("tomek",
+            "RecomputeNextNotificationsService: plannedPostureCheck: $plannedPostureCheck"
+        )
         // TODO: Create the planned check in repo. This requires creating a view model.
         val alarmIntent = Intent(context, NotificationAlarmBroadcastReceiver::class.java).let { intent ->
             intent.putExtras(plannedPostureCheck.toBundle())
@@ -93,6 +127,16 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
             AlarmManager.RTC_WAKEUP,
             plannedPostureCheck.millis,
             alarmIntent)
+    }
+
+    private fun getEarliestCheck(plannedChecks: Set<PlannedPostureCheck>): PlannedPostureCheck {
+        var earliest = plannedChecks.first()
+        for (check in plannedChecks) {
+            if (check.millis < earliest.millis) {
+                earliest = check
+            }
+        }
+        return earliest
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -121,10 +165,7 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
         }
 
         // Second pick the earliest upcoming check.
-        val plannedPostureCheck = PlannedPostureCheck(
-            id = UUID.randomUUID().toString(),
-            millis = System.currentTimeMillis() + 10000
-        )
+        val plannedPostureCheck = getEarliestCheck(newPlannedChecks)
 
         // Last schedule the earliest check.
         scheduleAlarm(context, plannedPostureCheck)

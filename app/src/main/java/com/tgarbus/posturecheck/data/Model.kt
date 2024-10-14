@@ -1,13 +1,17 @@
 package com.tgarbus.posturecheck.data
 
 import android.os.Bundle
+import java.sql.Time
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.UUID
 
 data class PlannedPostureCheck (
   val id: String,
   val millis: Long,
 ) {
+  constructor(millis: Long) : this(UUID.randomUUID().toString(), millis)
+
   fun toBundle(): Bundle {
     val bundle = Bundle()
     bundle.putString("id", this.id)
@@ -30,7 +34,7 @@ data class PlannedPostureCheck (
   fun formatDate(sdf: SimpleDateFormat): String {
     val calendar = Calendar.getInstance()
     calendar.timeInMillis = this.millis
-    return sdf.format(calendar)
+    return sdf.format(calendar.time)
   }
 
   fun getTimeOfDay(): TimeOfDay {
@@ -95,6 +99,26 @@ data class TimeOfDay(
 ): Comparable<TimeOfDay> {
   override fun compareTo(other: TimeOfDay): Int {
     return compareValuesBy(this, other, { it.hour }, { it.minute })
+  }
+
+  private fun nextMinute(): TimeOfDay {
+    if (minute == 59) {
+      if (hour == 23) {
+        return TimeOfDay(0, 0)
+      }
+      return TimeOfDay(hour + 1, 0)
+    }
+    return TimeOfDay(hour, minute + 1)
+  }
+
+  fun rangeTo(end: TimeOfDay): Array<TimeOfDay> {
+    var cur: TimeOfDay = this.copy(hour=hour, minute=minute)
+    val res = ArrayList<TimeOfDay>()
+    while (cur != end) {
+      res.add(cur)
+      cur = cur.nextMinute()
+    }
+    return res.toTypedArray()
   }
 
   companion object {
