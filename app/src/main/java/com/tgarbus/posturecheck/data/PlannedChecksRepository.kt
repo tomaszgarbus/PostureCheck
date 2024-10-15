@@ -19,7 +19,6 @@ val Context.plannedChecksDataStore: DataStore<Preferences> by preferencesDataSto
 class PlannedChecksRepository(private val context: Context) {
   private val idsKey: Preferences.Key<Set<String>> = stringSetPreferencesKey("planned_posture_checks_ids")
   private val millisKey: (String) -> Preferences.Key<Long> = { pccId -> longPreferencesKey("${pccId}_millis") }
-  private val replyKey: (String) -> Preferences.Key<String> = { pccId -> stringPreferencesKey("${pccId}_reply") }
 
   private fun getPlannedPostureCheckById(id: String, preferences: Preferences): PlannedPostureCheck {
     return PlannedPostureCheck(
