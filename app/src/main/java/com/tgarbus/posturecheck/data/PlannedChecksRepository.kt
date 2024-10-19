@@ -3,13 +3,11 @@ package com.tgarbus.posturecheck.data
 import android.content.Context
 import android.util.Log
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.PreferencesProto
 import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -56,7 +54,7 @@ class PlannedChecksRepository(private val context: Context) {
   }
 
   suspend fun addPlannedCheck(plannedPostureCheck: PlannedPostureCheck) {
-    context.pastChecksDataStore.edit { preferences ->
+    context.plannedChecksDataStore.edit { preferences ->
       preferences[millisKey(plannedPostureCheck.id)] = plannedPostureCheck.millis
       addIdToList(plannedPostureCheck.id, preferences)
     }

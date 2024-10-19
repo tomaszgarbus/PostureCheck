@@ -138,7 +138,36 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
     }
 
     override fun onReceive(context: Context, intent: Intent) {
-        val intent = Intent(context, RecomputeNextNotificationsService::class.java)
-        context.startService(intent)
+        val plannedChecksRepo = PlannedChecksRepository(context)
+        var oldPlannedChecks: Set<PlannedPostureCheck>? = null
+        runBlocking {
+            oldPlannedChecks = plannedChecksRepo.getPlannedChecks()
+        }
+        val newPlannedChecks = recomputeNextNotifications(
+            oldPlannedChecks!!
+        )
+        for (check in newPlannedChecks) {
+            if (!oldPlannedChecks!!.contains(check)) {
+                runBlocking {
+                    plannedChecksRepo.addPlannedCheck(check)
+                }
+            }
+        }
+        for (check in oldPlannedChecks!!) {
+            // We don't touch checks already planned for today.
+            if (!newPlannedChecks.contains(check) && !check.isToday()) {
+                runBlocking {
+                    plannedChecksRepo.deletePlannedCheck(check)
+                }
+            }
+        }
+
+        // Second pick the earliest upcoming check.
+        val plannedPostureCheck = getEarliestCheck(newPlannedChecks)
+
+        Log.i("tomek", "Scheduling check: " + plannedPostureCheck.toString())
+
+        // Last schedule the earliest check.
+        scheduleAlarm(context, plannedPostureCheck)
     }
 }

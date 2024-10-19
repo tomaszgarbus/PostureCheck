@@ -22,8 +22,10 @@ class PastChecksRepository(private val context: Context) {
 
   private fun getPastPostureCheckById(id: String, preferences: Preferences): PastPostureCheck {
     return PastPostureCheck(
-      id = id,
-      millis = preferences[millisKey(id)]!!,
+      PlannedPostureCheck(
+        id = id,
+        millis = preferences[millisKey(id)]!!
+      ),
       reply = PostureCheckReply.valueOf(preferences[replyKey(id)]!!),
     )
   }
@@ -48,9 +50,9 @@ class PastChecksRepository(private val context: Context) {
 
   suspend fun addPastCheck(pastPostureCheck: PastPostureCheck) {
     context.pastChecksDataStore.edit { preferences ->
-      preferences[millisKey(pastPostureCheck.id)] = pastPostureCheck.millis
-      preferences[replyKey(pastPostureCheck.id)] = pastPostureCheck.reply.name
-      addIdToList(pastPostureCheck.id, preferences)
+      preferences[millisKey(pastPostureCheck.planned.id)] = pastPostureCheck.planned.millis
+      preferences[replyKey(pastPostureCheck.planned.id)] = pastPostureCheck.reply.name
+      addIdToList(pastPostureCheck.planned.id, preferences)
       Log.i("tomek", preferences.toString())
     }
   }

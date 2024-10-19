@@ -21,8 +21,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.tgarbus.posturecheck.data.PastChecksRepository
 import com.tgarbus.posturecheck.data.PlannedChecksRepository
 import com.tgarbus.posturecheck.ui.theme.PostureCheckTheme
@@ -42,14 +44,13 @@ class MainActivity : ComponentActivity() {
         // A surface container using the 'background' color from the theme
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
           Column(modifier = Modifier.verticalScroll(scrollState)) {
-            Greeting("Android")
-            Text("Planned checks:", Modifier.size(20.dp))
+            Text("Planned checks:", style = TextStyle(fontSize = 20.sp))
             Text(
-              text = plannedChecksFlowState.value.toString()
+              text = plannedChecksFlowState.value.toList().sortedBy { it.millis }. toString()
             )
-            Text("Historical checks:", Modifier.size(20.dp))
+            Text("Historical checks:", style = TextStyle(fontSize = 20.sp))
             Text(
-              text = pastChecksFlowState.value.toString()
+              text = pastChecksFlowState.value.toList().sortedBy { it.planned.millis }. toString()
             )
           }
         }
@@ -57,21 +58,5 @@ class MainActivity : ComponentActivity() {
     }
     val intent = Intent(baseContext, RecomputeNextNotificationsBroadcastReceiver::class.java)
     sendBroadcast(intent)
-  }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-  Text(
-    text = "Hello $name!",
-    modifier = modifier
-  )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-  PostureCheckTheme {
-    Greeting("Android")
   }
 }

@@ -1,7 +1,6 @@
 package com.tgarbus.posturecheck.data
 
 import android.os.Bundle
-import java.sql.Time
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.UUID
@@ -21,8 +20,7 @@ data class PlannedPostureCheck (
 
   fun withReply(reply: PostureCheckReply): PastPostureCheck {
     return PastPostureCheck(
-      id = this.id,
-      millis = this.millis,
+      planned = this,
       reply = reply
     )
   }
@@ -39,6 +37,20 @@ data class PlannedPostureCheck (
 
   fun getTimeOfDay(): TimeOfDay {
     return TimeOfDay.fromMillis(this.millis)
+  }
+
+  fun isToday(): Boolean {
+    val checkCalendar = Calendar.getInstance()
+    checkCalendar.timeInMillis = this.millis
+    val todayCalendar = Calendar.getInstance()
+    todayCalendar.timeInMillis = System.currentTimeMillis()
+    return checkCalendar.get(Calendar.DATE) == todayCalendar.get(Calendar.DATE) &&
+      checkCalendar.get(Calendar.MONTH) == todayCalendar.get(Calendar.MONTH) &&
+      checkCalendar.get(Calendar.YEAR) == todayCalendar.get(Calendar.YEAR)
+  }
+
+  override fun toString(): String {
+    return "PlannedPostureCheck(${formatDate(SimpleDateFormat("dd-MM-yy HH:mm:ss"))}, ${id})"
   }
 
   companion object {
@@ -59,34 +71,35 @@ enum class PostureCheckReply {
 }
 
 data class PastPostureCheck (
-  val id: String,
-  val millis: Long,
+  val planned: PlannedPostureCheck,
   val reply: PostureCheckReply
 ) {
   fun toBundle(): Bundle {
     val bundle = Bundle()
-    bundle.putString("id", this.id)
-    bundle.putLong("millis", this.millis)
+    bundle.putString("id", this.planned.id)
+    bundle.putLong("millis", this.planned.millis)
     bundle.putString("reply", this.reply.name)
     return bundle
   }
 
   fun withoutReply(): PlannedPostureCheck {
     return PlannedPostureCheck(
-      id = this.id,
-      millis = this.millis
+      id = this.planned.id,
+      millis = this.planned.millis
     )
   }
 
   fun notificationId(): Int {
-    return (millis / 1000).toInt()
+    return (planned.millis / 1000).toInt()
   }
 
   companion object {
     fun fromBundle(bundle: Bundle): PastPostureCheck {
       return PastPostureCheck(
-        bundle.getString("id")!!,
-        bundle.getLong("millis"),
+        PlannedPostureCheck(
+          bundle.getString("id")!!,
+          bundle.getLong("millis")
+        ),
         PostureCheckReply.valueOf(bundle.getString("reply")!!)
       )
     }
