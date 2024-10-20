@@ -116,7 +116,6 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
         Log.i("tomek",
             "RecomputeNextNotificationsService: plannedPostureCheck: $plannedPostureCheck"
         )
-        // TODO: Create the planned check in repo. This requires creating a view model.
         val alarmIntent = Intent(context, NotificationAlarmBroadcastReceiver::class.java).let { intent ->
             intent.putExtras(plannedPostureCheck.toBundle())
             PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
@@ -146,6 +145,7 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
         val newPlannedChecks = recomputeNextNotifications(
             oldPlannedChecks!!
         )
+        // Add new checks to the repo.
         for (check in newPlannedChecks) {
             if (!oldPlannedChecks!!.contains(check)) {
                 runBlocking {
@@ -153,9 +153,18 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
                 }
             }
         }
+        // Remove old checks from the repo.
         for (check in oldPlannedChecks!!) {
             // We don't touch checks already planned for today.
             if (!newPlannedChecks.contains(check) && !check.isToday()) {
+                runBlocking {
+                    plannedChecksRepo.deletePlannedCheck(check)
+                }
+            }
+        }
+        // Clean up checks in the past from the repo.
+        for (check in oldPlannedChecks!!) {
+            if (check.isInPast()) {
                 runBlocking {
                     plannedChecksRepo.deletePlannedCheck(check)
                 }

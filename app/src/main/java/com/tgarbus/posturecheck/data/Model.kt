@@ -49,6 +49,14 @@ data class PlannedPostureCheck (
       checkCalendar.get(Calendar.YEAR) == todayCalendar.get(Calendar.YEAR)
   }
 
+  fun isInPast(): Boolean {
+    val checkCalendar = Calendar.getInstance()
+    checkCalendar.timeInMillis = this.millis
+    val nowCalendar = Calendar.getInstance()
+    nowCalendar.timeInMillis = System.currentTimeMillis()
+    return checkCalendar < nowCalendar
+  }
+
   override fun toString(): String {
     return "PlannedPostureCheck(${formatDate(SimpleDateFormat("dd-MM-yy HH:mm:ss"))}, ${id})"
   }
