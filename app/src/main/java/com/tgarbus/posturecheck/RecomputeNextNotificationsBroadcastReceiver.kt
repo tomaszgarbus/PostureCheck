@@ -10,13 +10,9 @@ import android.util.Log
 import com.tgarbus.posturecheck.data.PlannedChecksRepository
 import com.tgarbus.posturecheck.data.PlannedPostureCheck
 import com.tgarbus.posturecheck.data.TimeOfDay
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.UUID
 import kotlin.random.Random.Default.nextInt
 
 class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
@@ -26,6 +22,8 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
         minTime: TimeOfDay,
         maxTime: TimeOfDay
     ): Boolean {
+        Log.i("tomek", "Validation notifications per day: ${notifications}, ${notificationsPerDay}, ${minTime}, ${maxTime}")
+
         // Validate number of notifications.
         if (notifications.size != notificationsPerDay) {
             return false
@@ -83,11 +81,17 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
         val sdf = SimpleDateFormat("dd-MM-yyyy")
         sdf.timeZone = calendar.getTimeZone()
 
+        Log.i("tomek", "Recomputing notifications: ${nextNotifications.toString()}")
         // First group notifications per day for the upcoming days.
         val groupedByDay = HashMap<String, HashSet<PlannedPostureCheck>>()
         for (plannedCheck in nextNotifications) {
-            groupedByDay.getOrDefault(plannedCheck.formatDate(sdf), HashSet()).add(plannedCheck)
+            val dateStr = plannedCheck.formatDate(sdf)
+            if (!groupedByDay.contains(dateStr)) {
+                groupedByDay[dateStr] = HashSet()
+            }
+            groupedByDay[dateStr]!!.add(plannedCheck)
         }
+        Log.i("tomek", groupedByDay.toString())
 
         // Recompute days which have wrong number of notifications or don't comply with
         // preferred times.
@@ -96,6 +100,7 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
             val dayStr = sdf.format(calendar.time)
             if (!validateNotificationsForDay(groupedByDay.getOrDefault(dayStr, HashSet()),
                 notificationsPerDay, minTime, maxTime)) {
+                Log.i("tomek", "Recomputing notifications for day ${dayStr}")
                 groupedByDay[dayStr] =
                     recomputeNotificationsForDay(notificationsPerDay, calendar, minTime, maxTime)
             }
@@ -105,6 +110,14 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
         val recomputedNotifications = HashSet<PlannedPostureCheck>()
         for (day in groupedByDay.keys) {
             recomputedNotifications.addAll(groupedByDay.getOrDefault(day, HashSet()))
+        }
+
+        val debugMissingNotifications = false
+        if (debugMissingNotifications) {
+            val soon: Calendar = Calendar.getInstance()
+            soon.timeInMillis = System.currentTimeMillis() + 100000
+            val checkInTenSeconds = PlannedPostureCheck(millis = soon.timeInMillis)
+            recomputedNotifications.add(checkInTenSeconds)
         }
 
         return recomputedNotifications
@@ -120,7 +133,7 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
             intent.putExtras(plannedPostureCheck.toBundle())
             PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
         }
-        a.set(
+        a.setAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
             plannedPostureCheck.millis,
             alarmIntent)
@@ -162,14 +175,7 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
                 }
             }
         }
-        // Clean up checks in the past from the repo.
-        for (check in oldPlannedChecks!!) {
-            if (check.isInPast()) {
-                runBlocking {
-                    plannedChecksRepo.deletePlannedCheck(check)
-                }
-            }
-        }
+        // TODO: Clean up checks in the past from the repo.
 
         // Second pick the earliest upcoming check.
         val plannedPostureCheck = getEarliestCheck(newPlannedChecks)
