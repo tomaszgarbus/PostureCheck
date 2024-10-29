@@ -139,10 +139,12 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
             alarmIntent)
     }
 
-    private fun getEarliestCheck(plannedChecks: Set<PlannedPostureCheck>): PlannedPostureCheck {
+    private fun getEarliestFutureCheck(plannedChecks: Set<PlannedPostureCheck>): PlannedPostureCheck {
         var earliest = plannedChecks.first()
+        val timeNow = System.currentTimeMillis()
         for (check in plannedChecks) {
-            if (check.millis < earliest.millis) {
+            if (check.millis > timeNow &&
+                check.millis < earliest.millis) {
                 earliest = check
             }
         }
@@ -178,7 +180,7 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
         // TODO: Clean up checks in the past from the repo.
 
         // Second pick the earliest upcoming check.
-        val plannedPostureCheck = getEarliestCheck(newPlannedChecks)
+        val plannedPostureCheck = getEarliestFutureCheck(newPlannedChecks)
 
         Log.i("tomek", "Scheduling check: " + plannedPostureCheck.toString())
 
