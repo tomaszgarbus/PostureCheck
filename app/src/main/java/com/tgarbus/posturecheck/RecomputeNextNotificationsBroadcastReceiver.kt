@@ -37,11 +37,7 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
 
         // Validate max time.
         val latestTime = notifications.maxBy { it.getTimeOfDay() }.getTimeOfDay()
-        if (latestTime > maxTime) {
-            return false
-        }
-
-        return true
+        return latestTime <= maxTime
     }
 
     private fun recomputeNotificationsForDay(
@@ -81,7 +77,7 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
         val sdf = SimpleDateFormat("dd-MM-yyyy")
         sdf.timeZone = calendar.getTimeZone()
 
-        Log.i("tomek", "Recomputing notifications: ${nextNotifications.toString()}")
+        Log.i("tomek", "Recomputing notifications: $nextNotifications")
         // First group notifications per day for the upcoming days.
         val groupedByDay = HashMap<String, HashSet<PlannedPostureCheck>>()
         for (plannedCheck in nextNotifications) {

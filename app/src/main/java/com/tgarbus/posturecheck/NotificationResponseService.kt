@@ -17,11 +17,7 @@ class NotificationResponseService : Service() {
   private val job = SupervisorJob()
   private val scope = CoroutineScope(job)
 
-  override fun onCreate() {
-    super.onCreate()
-  }
-
-  override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     super.onStartCommand(intent, flags, startId)
     val context = this
     val pastCheck: PastPostureCheck = PastPostureCheck.fromBundle(intent!!.extras!!)
