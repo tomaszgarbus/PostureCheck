@@ -18,6 +18,7 @@ import com.tgarbus.posturecheck.data.PlannedChecksRepository
 
 @Composable
 fun AdminPage() {
+
     PageHeader("Admin Page")
     val pastChecksFlowState =
         PastChecksRepository(LocalContext.current).getPastChecksHistoryAsFlow().collectAsState(
