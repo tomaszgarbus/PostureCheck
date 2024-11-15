@@ -142,6 +142,10 @@ data class TimeOfDay(
     return res.toTypedArray()
   }
 
+  fun toPreferencesStorageFormat(): Int {
+    return 100 * hour + minute
+  }
+
   companion object {
     fun fromMillis(millis: Long): TimeOfDay {
       val calendar = Calendar.getInstance()
@@ -150,6 +154,10 @@ data class TimeOfDay(
         calendar.get(Calendar.HOUR_OF_DAY),
         calendar.get(Calendar.MINUTE)
       )
+    }
+
+    fun fromPreferencesStorageFormat(value: Int): TimeOfDay {
+      return TimeOfDay(value / 100, value % 100)
     }
   }
 }

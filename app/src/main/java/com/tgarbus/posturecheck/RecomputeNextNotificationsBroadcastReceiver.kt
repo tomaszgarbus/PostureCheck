@@ -9,8 +9,14 @@ import android.content.Intent
 import android.util.Log
 import com.tgarbus.posturecheck.data.PlannedChecksRepository
 import com.tgarbus.posturecheck.data.PlannedPostureCheck
+import com.tgarbus.posturecheck.data.SettingsRepository
 import com.tgarbus.posturecheck.data.TimeOfDay
+import com.tgarbus.posturecheck.data.kDefaultEarliestNotificationTime
+import com.tgarbus.posturecheck.data.kDefaultLatestNotificationTime
+import com.tgarbus.posturecheck.data.kDefaultNotificationsPerDay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import java.sql.Time
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import kotlin.random.Random.Default.nextInt
@@ -65,9 +71,9 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
     private fun recomputeNextNotifications(
         nextNotifications: Set<PlannedPostureCheck>,
         daysAhead: Int = 5,
-        notificationsPerDay: Int = 3,
-        minTime: TimeOfDay = TimeOfDay(8, 0),
-        maxTime: TimeOfDay = TimeOfDay(21, 0)
+        notificationsPerDay: Int = kDefaultNotificationsPerDay,
+        minTime: TimeOfDay = TimeOfDay.fromPreferencesStorageFormat(kDefaultEarliestNotificationTime),
+        maxTime: TimeOfDay = TimeOfDay.fromPreferencesStorageFormat(kDefaultLatestNotificationTime)
         // TODO: max time
     ): Set<PlannedPostureCheck> {
         val calendar: Calendar = Calendar.getInstance()
@@ -149,12 +155,24 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val plannedChecksRepo = PlannedChecksRepository(context)
+        val settingsRepo = SettingsRepository(context)
         var oldPlannedChecks: Set<PlannedPostureCheck>? = null
+        var notificationsPerDay = kDefaultNotificationsPerDay
+        var earliestNotificationTime = TimeOfDay.fromPreferencesStorageFormat(
+            kDefaultEarliestNotificationTime)
+        var latestNotificationTime = TimeOfDay.fromPreferencesStorageFormat(
+            kDefaultLatestNotificationTime)
         runBlocking {
             oldPlannedChecks = plannedChecksRepo.getPlannedChecks()
+            notificationsPerDay = settingsRepo.getNotificationsPerDayAsFlow().first()
+            earliestNotificationTime = settingsRepo.getEarliestNotificationTimeAsFlow().first()
+            latestNotificationTime = settingsRepo.getLatestNotificationTimeAsFlow().first()
         }
         val newPlannedChecks = recomputeNextNotifications(
-            oldPlannedChecks!!
+            oldPlannedChecks!!,
+            notificationsPerDay = notificationsPerDay,
+            minTime = earliestNotificationTime,
+            maxTime = latestNotificationTime
         )
         // Add new checks to the repo.
         for (check in newPlannedChecks) {
