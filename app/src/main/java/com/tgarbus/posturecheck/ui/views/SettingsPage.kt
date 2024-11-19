@@ -13,6 +13,7 @@ import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposableOpenTarget
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -23,6 +24,8 @@ import com.tgarbus.posturecheck.data.TimeOfDay
 import com.tgarbus.posturecheck.data.kDefaultEarliestNotificationTime
 import com.tgarbus.posturecheck.data.kDefaultLatestNotificationTime
 import com.tgarbus.posturecheck.data.kDefaultNotificationsPerDay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import java.util.Calendar
 
 @Composable
@@ -42,9 +45,12 @@ fun SettingsPage(
     triggerRecompute: () -> Unit
 ) {
     val context = LocalContext.current
-
-    val notificationsPerDay =
-        viewModel.getNotificationsPerDay(context).collectAsState(kDefaultNotificationsPerDay)
+    var notificationsPerDay: Int
+    runBlocking {
+        notificationsPerDay =
+            viewModel.getNotificationsPerDay(context).first()
+    }
+    val notificationsPerDayLocal = remember { mutableIntStateOf(notificationsPerDay) }
     val notificationsPerDayBounds = Pair(1, 10)
 
     val earliestNotificationTime = viewModel.getEarliestNotificationTime(context).collectAsState(
@@ -58,12 +64,15 @@ fun SettingsPage(
     Column {
         PageHeader("Settings")
 
-        SettingsItem("Notifications per day: ${notificationsPerDay.value}") {
+        SettingsItem("Notifications per day: ${notificationsPerDayLocal.intValue}") {
             Slider(
-                value = notificationsPerDay.value.toFloat(),
+                value = notificationsPerDayLocal.intValue.toFloat(),
                 onValueChange = {
-                    Log.i("tomek", it.toInt().toString())
-                    viewModel.setNotificationsPerDay(context, it.toInt())
+                    notificationsPerDayLocal.intValue = it.toInt()
+                },
+                onValueChangeFinished = {
+                    Log.i("tomek", notificationsPerDayLocal.intValue.toString())
+                    viewModel.setNotificationsPerDay(context, notificationsPerDayLocal.intValue)
                     triggerRecompute()
                 },
                 steps = notificationsPerDayBounds.second - notificationsPerDayBounds.first + 1,
