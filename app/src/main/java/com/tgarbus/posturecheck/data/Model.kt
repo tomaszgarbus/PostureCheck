@@ -39,6 +39,10 @@ data class PlannedPostureCheck (
     return TimeOfDay.fromMillis(this.millis)
   }
 
+  fun getDay(): Day {
+    return Day.fromMillis(this.millis)
+  }
+
   fun isToday(): Boolean {
     val checkCalendar = Calendar.getInstance()
     checkCalendar.timeInMillis = this.millis
@@ -158,6 +162,33 @@ data class TimeOfDay(
 
     fun fromPreferencesStorageFormat(value: Int): TimeOfDay {
       return TimeOfDay(value / 100, value % 100)
+    }
+  }
+}
+
+data class Day(
+  val dayOfMonth: Int,
+  val month: Int,
+  val year: Int,
+): Comparable<Day> {
+
+  override fun compareTo(other: Day): Int {
+    return compareValuesBy(this, other, { it.year }, { it.month }, { it.dayOfMonth })
+  }
+
+  override fun toString(): String {
+    return "${year}-${month}-${dayOfMonth}"
+  }
+
+  companion object {
+    fun fromMillis(millis: Long): Day {
+      val calendar = Calendar.getInstance()
+      calendar.timeInMillis = millis
+      return Day(
+        calendar.get(Calendar.DAY_OF_MONTH),
+        calendar.get(Calendar.MONTH),
+        calendar.get(Calendar.YEAR)
+      )
     }
   }
 }

@@ -5,13 +5,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
-import androidx.compose.material3.TimeInput
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ComposableOpenTarget
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -23,10 +19,8 @@ import com.tgarbus.posturecheck.data.SettingsViewModel
 import com.tgarbus.posturecheck.data.TimeOfDay
 import com.tgarbus.posturecheck.data.kDefaultEarliestNotificationTime
 import com.tgarbus.posturecheck.data.kDefaultLatestNotificationTime
-import com.tgarbus.posturecheck.data.kDefaultNotificationsPerDay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import java.util.Calendar
 
 @Composable
 fun TimeOfDaySettingsEntry(
