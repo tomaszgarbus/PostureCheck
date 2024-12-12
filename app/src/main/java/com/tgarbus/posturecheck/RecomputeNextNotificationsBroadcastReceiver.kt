@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import com.tgarbus.posturecheck.data.Day
 import com.tgarbus.posturecheck.data.PlannedChecksRepository
 import com.tgarbus.posturecheck.data.PlannedPostureCheck
 import com.tgarbus.posturecheck.data.SettingsRepository
@@ -14,6 +15,8 @@ import com.tgarbus.posturecheck.data.TimeOfDay
 import com.tgarbus.posturecheck.data.kDefaultEarliestNotificationTime
 import com.tgarbus.posturecheck.data.kDefaultLatestNotificationTime
 import com.tgarbus.posturecheck.data.kDefaultNotificationsPerDay
+import com.tgarbus.posturecheck.data.recomputeNotificationsForDay
+import com.tgarbus.posturecheck.data.validateNotificationsForDay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import java.sql.Time
@@ -22,50 +25,6 @@ import java.util.Calendar
 import kotlin.random.Random.Default.nextInt
 
 class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
-    private fun validateNotificationsForDay(
-        notifications: Set<PlannedPostureCheck>,
-        notificationsPerDay: Int,
-        minTime: TimeOfDay,
-        maxTime: TimeOfDay
-    ): Boolean {
-        Log.i("tomek", "Validation notifications per day: ${notifications}, ${notificationsPerDay}, ${minTime}, ${maxTime}")
-
-        // Validate number of notifications.
-        if (notifications.size != notificationsPerDay) {
-            return false
-        }
-
-        // Validate min time.
-        val earliestTime = notifications.minBy { it.getTimeOfDay() }.getTimeOfDay()
-        if (earliestTime < minTime) {
-            return false
-        }
-
-        // Validate max time.
-        val latestTime = notifications.maxBy { it.getTimeOfDay() }.getTimeOfDay()
-        return latestTime <= maxTime
-    }
-
-    private fun recomputeNotificationsForDay(
-        notificationsPerDay: Int,
-        getDayFrom: Calendar,
-        minTime: TimeOfDay,
-        maxTime: TimeOfDay): HashSet<PlannedPostureCheck> {
-        val checks = HashSet<PlannedPostureCheck>()
-        val range = minTime.rangeTo(maxTime)
-        val cal = Calendar.getInstance()
-        cal.timeInMillis = getDayFrom.timeInMillis
-        for (i in 1..notificationsPerDay) {
-            // TODO: prevent duplicates or too close checks.
-            val timeOfDay = range[nextInt(0, range.size)]
-            cal.set(Calendar.HOUR_OF_DAY, timeOfDay.hour)
-            cal.set(Calendar.MINUTE, timeOfDay.minute)
-            val check = PlannedPostureCheck(millis = cal.timeInMillis)
-            checks.add(check)
-        }
-        return checks
-    }
-
     // TODO: handle different locale
     // TOOD: recompute if user extended min and max time frame
     private fun recomputeNextNotifications(
@@ -97,6 +56,7 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
 
         // Recompute days which have wrong number of notifications or don't comply with
         // preferred times.
+        // TODO: refactor using the Day data model.
         for (i in 1..daysAhead) {
             calendar.add(Calendar.DATE, 1)
             val dayStr = sdf.format(calendar.time)
@@ -104,7 +64,7 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
                 notificationsPerDay, minTime, maxTime)) {
                 Log.i("tomek", "Recomputing notifications for day ${dayStr}")
                 groupedByDay[dayStr] =
-                    recomputeNotificationsForDay(notificationsPerDay, calendar, minTime, maxTime)
+                    recomputeNotificationsForDay(notificationsPerDay, Day.fromMillis(calendar.timeInMillis), minTime, maxTime)
             }
         }
 
@@ -133,7 +93,7 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
         )
         val alarmIntent = Intent(context, NotificationAlarmBroadcastReceiver::class.java).let { intent ->
             intent.putExtras(plannedPostureCheck.toBundle())
-            PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
         }
         a.setAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,

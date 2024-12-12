@@ -48,6 +48,25 @@ class PastChecksRepository(private val context: Context) {
     preferences[idsKey] = ids
   }
 
+  private fun addIdToList(ids: List<String>, preferences: MutablePreferences) {
+    val allIds: HashSet<String> = preferences[idsKey]?.let { HashSet(it) } ?: HashSet()
+    for (id in ids) {
+      allIds.add(id)
+    }
+    preferences[idsKey] = allIds
+  }
+
+  suspend fun addPastChecks(checks: ArrayList<PastPostureCheck>) {
+    context.pastChecksDataStore.edit { preferences ->
+      for (check in checks) {
+        preferences[millisKey(check.planned.id)] = check.planned.millis
+        preferences[replyKey(check.planned.id)] = check.reply.name
+      }
+      addIdToList(checks.map { it.planned.id }, preferences)
+      Log.i("tomek", preferences.toString())
+    }
+  }
+
   suspend fun addPastCheck(pastPostureCheck: PastPostureCheck) {
     context.pastChecksDataStore.edit { preferences ->
       preferences[millisKey(pastPostureCheck.planned.id)] = pastPostureCheck.planned.millis

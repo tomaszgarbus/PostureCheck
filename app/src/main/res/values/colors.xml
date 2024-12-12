@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <color name="primary">#630065</color>
-  <color name="primary_gradient">#270028</color>
+  <color name="mint">#9DD4B8</color>
+  <color name="light_mint">#EAF9F2</color>
+  <color name="dark_green">#3C5343</color>
+  <color name="accent_yellow">#FFF654</color>
+  <color name="spacer_grey">#CFCFCF</color>
   <color name="good_answer">#00ff00</color>
   <color name="bad_answer">#ff0000</color>
   <color name="no_answer">#aaaaaa</color>

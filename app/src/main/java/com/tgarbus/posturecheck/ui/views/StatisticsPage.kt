@@ -3,9 +3,12 @@ package com.tgarbus.posturecheck.ui.views
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -20,7 +23,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
@@ -31,7 +36,12 @@ import com.tgarbus.posturecheck.data.Day
 import com.tgarbus.posturecheck.data.PastPostureCheck
 import com.tgarbus.posturecheck.data.PostureCheckReply
 import com.tgarbus.posturecheck.data.StatisticsViewModel
+import com.tgarbus.posturecheck.ui.TextStyles.Companion.h2
+import com.tgarbus.posturecheck.ui.reusables.DropdownMenu
+import com.tgarbus.posturecheck.ui.reusables.DropdownOption
+import com.tgarbus.posturecheck.ui.reusables.ScrollableFullScreenColumn
 import kotlinx.coroutines.launch
+import kotlin.math.max
 
 // https://stackoverflow.com/questions/70057396/how-to-show-vertical-text-with-proper-size-layout-in-jetpack-compose
 fun Modifier.rotateVertically(clockwise: Boolean = true): Modifier {
@@ -56,7 +66,7 @@ fun ActivityGraph(checks: Set<PastPostureCheck>) {
     val scope = rememberCoroutineScope()
     Row(
         modifier = Modifier.horizontalScroll(scrollState, reverseScrolling = true),
-        verticalAlignment = Alignment.Bottom
+        verticalAlignment = Alignment.Top
     ) {
         // Group checks by day.
         val groupedByDay = HashMap<Day, ArrayList<PastPostureCheck>>()
@@ -67,9 +77,12 @@ fun ActivityGraph(checks: Set<PastPostureCheck>) {
             }
             groupedByDay[day]!!.add(check)
         }
+        var highestCountPerDay = 0
         for (day in groupedByDay.keys) {
             groupedByDay[day]!!.sortBy { it.planned.getTimeOfDay() }
+            highestCountPerDay = max(highestCountPerDay, groupedByDay[day]!!.size)
         }
+
 
         val colorMapping: HashMap<PostureCheckReply, Int> = hashMapOf(
             PostureCheckReply.GOOD to R.color.good_answer,
@@ -80,16 +93,29 @@ fun ActivityGraph(checks: Set<PastPostureCheck>) {
 
         for (day in groupedByDay.keys.sorted()) {
             Column {
+                // Add padding
+                for (i in 1..highestCountPerDay - groupedByDay[day]!!.size) {
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .padding(3.dp)
+                            .background(
+                                Color.Transparent,
+                                RoundedCornerShape(3.dp)
+                            )
+                    )
+                }
                 for (check in groupedByDay[day]!!) {
                     val tooltipState = remember { RichTooltipState() }
                     RichTooltipBox(
-                        text = { Text("${day}, $check") },
+                        text = { Text("${day}, ${check.planned.getTimeOfDay()}") },
                         tooltipState = tooltipState
                     ) {
+                        val highlighted = tooltipState.isVisible.compareTo(false)
                         Box(
                             modifier = Modifier
                                 .size(30.dp)
-                                .padding(3.dp)
+                                .padding(3.dp * (1 - highlighted))
                                 .background(
                                     colorResource(colorMapping[check.reply]!!),
                                     RoundedCornerShape(3.dp)
@@ -113,12 +139,72 @@ fun ActivityGraph(checks: Set<PastPostureCheck>) {
 }
 
 @Composable
+fun SummaryEntry(
+    percent: Int, name: String, color: Color,
+    textColor: Color = colorResource(R.color.dark_green)) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Box(
+            modifier =
+                Modifier
+                    .size(34.dp)
+                    .clip(RoundedCornerShape(17.dp))
+                    .background(color),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("${percent}%", style = h2.copy(color = textColor))
+        }
+        Text(name, style = h2.copy(color = Color.White))
+    }
+}
+
+@Composable
+fun Summary() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(colorResource(R.color.mint))
+            .padding(20.dp),
+        horizontalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(22.dp)
+        ) {
+            SummaryEntry(60, "Straight posture", colorResource(R.color.accent_yellow))
+            SummaryEntry(23, "Slouching", colorResource(R.color.dark_green), textColor = Color.White)
+            SummaryEntry(17, "No answer", colorResource(R.color.light_mint))
+        }
+        Column(
+            modifier = Modifier
+        ) {
+
+        }
+    }
+}
+
+@Composable
 fun StatisticsPage(
     viewModel: StatisticsViewModel = viewModel(),
 ) {
     val pastChecks = viewModel.getPastPostureChecks(LocalContext.current).collectAsState(HashSet())
-    Column {
-        PageHeader("Statistics")
-        ActivityGraph(pastChecks.value)
+    val weekDropdownOption = DropdownOption(text = "Week", onSelect = {})
+    val monthDropdownOption = DropdownOption(text = "Month", onSelect = {})
+    val allTimeDropdownOption = DropdownOption(text = "All time", onSelect = {})
+    Box(modifier = Modifier.fillMaxSize()) {
+        ScrollableFullScreenColumn(headerHeight = 86.dp) {
+            Summary()
+            // PageHeader("Statistics")
+            // ActivityGraph(pastChecks.value)
+        }
+        Box(modifier = Modifier.fillMaxSize().padding(20.dp, 32.dp)) {
+            DropdownMenu(
+                modifier = Modifier.align(Alignment.TopEnd),
+                options = listOf(weekDropdownOption, monthDropdownOption, allTimeDropdownOption),
+                default = weekDropdownOption
+            )
+        }
     }
 }

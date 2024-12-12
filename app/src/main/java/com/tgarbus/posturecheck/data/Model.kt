@@ -177,7 +177,31 @@ data class Day(
   }
 
   override fun toString(): String {
-    return "${year}-${month}-${dayOfMonth}"
+    return "${year}-${month + 1}-${dayOfMonth}"
+  }
+
+  private fun toCalendar(): Calendar {
+    val calendar = Calendar.getInstance()
+    calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+    calendar.set(Calendar.MONTH, month)
+    calendar.set(Calendar.YEAR, year)
+    return calendar
+  }
+
+  fun toMillis(): Long {
+    return toCalendar().timeInMillis
+  }
+
+  operator fun plus(days: Int): Day {
+    val calendar = toCalendar()
+    calendar.add(Calendar.DAY_OF_MONTH, days)
+    return Day.fromMillis(calendar.timeInMillis)
+  }
+
+  operator fun minus(days: Int): Day {
+    val calendar = toCalendar()
+    calendar.add(Calendar.DAY_OF_MONTH, -days)
+    return Day.fromMillis(calendar.timeInMillis)
   }
 
   companion object {
@@ -189,6 +213,21 @@ data class Day(
         calendar.get(Calendar.MONTH),
         calendar.get(Calendar.YEAR)
       )
+    }
+
+    fun today(): Day {
+      return fromMillis(System.currentTimeMillis())
+    }
+
+    fun range(firstDay: Day, lastDay: Day): ArrayList<Day> {
+      // The range is inclusive on both ends.
+      var day = firstDay
+      val result = ArrayList<Day>()
+      do {
+        result.add(day)
+        day += 1
+      } while (day != lastDay)
+      return result
     }
   }
 }

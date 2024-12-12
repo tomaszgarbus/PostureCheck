@@ -46,7 +46,7 @@ class NotificationAlarmBroadcastReceiver : BroadcastReceiver() {
       intent.putExtras(plannedPostureCheck.withReply(reply).toBundle())
       // TODO: Rewrite construction of request code to make it clear there can be no collision.
       val requestCode = plannedPostureCheck.notificationId() + reply.ordinal
-      PendingIntent.getService(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+      PendingIntent.getService(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
     }
   }
 
@@ -58,7 +58,7 @@ class NotificationAlarmBroadcastReceiver : BroadcastReceiver() {
 
     val builder = NotificationCompat.Builder(context, NotificationConstants.channelId)
       .setSmallIcon(R.drawable.ic_launcher_foreground)
-      .setContentTitle("jaka postawa wariacie?")
+      .setContentTitle("Hey, how's your posture?")
       .setPriority(NotificationCompat.PRIORITY_MAX)
       .addAction(R.drawable.ic_launcher_foreground, "Good", buildPendingIntentForReply(
         PostureCheckReply.GOOD, plannedPostureCheck, context))

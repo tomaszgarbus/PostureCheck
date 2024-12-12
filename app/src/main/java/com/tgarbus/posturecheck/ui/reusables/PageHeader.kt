@@ -1,4 +1,4 @@
-package com.tgarbus.posturecheck.ui.views
+package com.tgarbus.posturecheck.ui.reusables
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
