@@ -27,7 +27,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.tgarbus.posturecheck.R
-import com.tgarbus.posturecheck.ui.TextStyles.Companion.h2
+import com.tgarbus.posturecheck.ui.TextStyles.Companion.h3
 
 data class DropdownOption(
     val text: String,
@@ -50,7 +50,7 @@ fun DropdownMenu(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(selected.value.text, style = h2.copy(colorResource(R.color.dark_green)))
+                Text(selected.value.text, style = h3.copy(colorResource(R.color.dark_green)))
                 Image(
                     painterResource(
                         if (isExpanded.value)
@@ -72,7 +72,7 @@ fun DropdownMenu(
                     for (option in options) {
                         Text(
                             option.text,
-                            style = h2.copy(colorResource(R.color.dark_green))
+                            style = h3.copy(colorResource(R.color.dark_green))
                         )
                         Spacer(modifier = Modifier
                             .height(1.dp).background(colorResource(R.color.no_answer)))

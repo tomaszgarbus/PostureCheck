@@ -7,10 +7,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,13 +34,16 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tgarbus.posturecheck.R
 import com.tgarbus.posturecheck.data.Day
 import com.tgarbus.posturecheck.data.PastPostureCheck
 import com.tgarbus.posturecheck.data.PostureCheckReply
 import com.tgarbus.posturecheck.data.StatisticsViewModel
-import com.tgarbus.posturecheck.ui.TextStyles.Companion.h2
+import com.tgarbus.posturecheck.ui.TextStyles.Companion.h3
+import com.tgarbus.posturecheck.ui.reusables.CircularGraph
+import com.tgarbus.posturecheck.ui.reusables.CircularGraphComponent
 import com.tgarbus.posturecheck.ui.reusables.DropdownMenu
 import com.tgarbus.posturecheck.ui.reusables.DropdownOption
 import com.tgarbus.posturecheck.ui.reusables.ScrollableFullScreenColumn
@@ -154,9 +161,9 @@ fun SummaryEntry(
                     .background(color),
             contentAlignment = Alignment.Center,
         ) {
-            Text("${percent}%", style = h2.copy(color = textColor))
+            Text("${percent}%", style = h3.copy(color = textColor))
         }
-        Text(name, style = h2.copy(color = Color.White))
+        Text(name, style = h3.copy(color = Color.White))
     }
 }
 
@@ -171,16 +178,41 @@ fun Summary() {
         horizontalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         Column(
+            modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(22.dp)
         ) {
             SummaryEntry(60, "Straight posture", colorResource(R.color.accent_yellow))
             SummaryEntry(23, "Slouching", colorResource(R.color.dark_green), textColor = Color.White)
             SummaryEntry(17, "No answer", colorResource(R.color.light_mint))
         }
-        Column(
-            modifier = Modifier
+        Box(
+            modifier = Modifier.weight(1f).aspectRatio(1f),
+            contentAlignment = Alignment.Center
         ) {
-
+            CircularGraph(
+                canvasModifier = Modifier.fillMaxSize(),
+                entries = listOf(
+                    CircularGraphComponent(60, colorResource(R.color.accent_yellow)),
+                    CircularGraphComponent(23, colorResource(R.color.dark_green)),
+                    CircularGraphComponent(17, colorResource(R.color.light_mint)),
+                ))
+            Column(
+                modifier = Modifier.wrapContentSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center) {
+                Row(modifier = Modifier.wrapContentSize()) {
+                    Text(
+                        "60",
+                        style = h3.copy(color = Color.White, fontSize = 32.sp),
+                        modifier = Modifier.alignByBaseline())
+                    Text(
+                        "%",
+                        style = h3.copy(color = Color.White, fontSize = 16.sp),
+                        modifier = Modifier.alignByBaseline())
+                }
+                Text("straight posture", style = h3.copy(color = Color.White))
+                Spacer(modifier = Modifier.height(10.dp))
+            }
         }
     }
 }
