@@ -17,10 +17,11 @@ import com.tgarbus.posturecheck.R
 @Composable
 fun ScrollableFullScreenColumn(
     headerHeight: Dp = 0.dp,
+    modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(colorResource(R.color.light_mint))
     ) {

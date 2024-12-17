@@ -41,11 +41,13 @@ import com.tgarbus.posturecheck.data.Day
 import com.tgarbus.posturecheck.data.PastPostureCheck
 import com.tgarbus.posturecheck.data.PostureCheckReply
 import com.tgarbus.posturecheck.data.StatisticsViewModel
-import com.tgarbus.posturecheck.ui.TextStyles.Companion.h3
+import com.tgarbus.posturecheck.ui.TextStyles.Companion.h4
 import com.tgarbus.posturecheck.ui.reusables.CircularGraph
 import com.tgarbus.posturecheck.ui.reusables.CircularGraphComponent
 import com.tgarbus.posturecheck.ui.reusables.DropdownMenu
 import com.tgarbus.posturecheck.ui.reusables.DropdownOption
+import com.tgarbus.posturecheck.ui.reusables.LineChart
+import com.tgarbus.posturecheck.ui.reusables.LineChartEntry
 import com.tgarbus.posturecheck.ui.reusables.ScrollableFullScreenColumn
 import kotlinx.coroutines.launch
 import kotlin.math.max
@@ -161,9 +163,9 @@ fun SummaryEntry(
                     .background(color),
             contentAlignment = Alignment.Center,
         ) {
-            Text("${percent}%", style = h3.copy(color = textColor))
+            Text("${percent}%", style = h4.copy(color = textColor))
         }
-        Text(name, style = h3.copy(color = Color.White))
+        Text(name, style = h4.copy(color = Color.White))
     }
 }
 
@@ -203,17 +205,42 @@ fun Summary() {
                 Row(modifier = Modifier.wrapContentSize()) {
                     Text(
                         "60",
-                        style = h3.copy(color = Color.White, fontSize = 32.sp),
+                        style = h4.copy(color = Color.White, fontSize = 32.sp),
                         modifier = Modifier.alignByBaseline())
                     Text(
                         "%",
-                        style = h3.copy(color = Color.White, fontSize = 16.sp),
+                        style = h4.copy(color = Color.White, fontSize = 16.sp),
                         modifier = Modifier.alignByBaseline())
                 }
-                Text("straight posture", style = h3.copy(color = Color.White))
+                Text("straight posture", style = h4.copy(color = Color.White))
                 Spacer(modifier = Modifier.height(10.dp))
             }
         }
+    }
+}
+
+@Composable
+fun LineChartDisplay() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(1.5f)
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color.White)
+            .padding(20.dp),
+        horizontalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        LineChart(
+            ArrayList(listOf(
+                LineChartEntry(value = 1f, label = "Mon"),
+                LineChartEntry(value = 0.8f, label = "Tue"),
+                LineChartEntry(value = 0.5f, label = "Wed"),
+                LineChartEntry(value = 1f, label = "Thu"),
+                LineChartEntry(value = 0f, label = "Fri"),
+                LineChartEntry(value = 0.3f, label = "Sat"),
+                LineChartEntry(value = 1f, label = "Sun"),
+            )),
+            canvasModifier = Modifier.fillMaxSize())
     }
 }
 
@@ -225,18 +252,18 @@ fun StatisticsPage(
     val weekDropdownOption = DropdownOption(text = "Week", onSelect = {})
     val monthDropdownOption = DropdownOption(text = "Month", onSelect = {})
     val allTimeDropdownOption = DropdownOption(text = "All time", onSelect = {})
-    Box(modifier = Modifier.fillMaxSize()) {
-        ScrollableFullScreenColumn(headerHeight = 86.dp) {
-            Summary()
-            // PageHeader("Statistics")
-            // ActivityGraph(pastChecks.value)
-        }
-        Box(modifier = Modifier.fillMaxSize().padding(20.dp, 32.dp)) {
-            DropdownMenu(
-                modifier = Modifier.align(Alignment.TopEnd),
-                options = listOf(weekDropdownOption, monthDropdownOption, allTimeDropdownOption),
-                default = weekDropdownOption
-            )
-        }
+    ScrollableFullScreenColumn(headerHeight = 86.dp) {
+        Summary()
+        Spacer(modifier = Modifier.height(20.dp))
+        LineChartDisplay()
+        // PageHeader("Statistics")
+        // ActivityGraph(pastChecks.value)
+    }
+    Box(modifier = Modifier.fillMaxSize().padding(20.dp, 32.dp)) {
+        DropdownMenu(
+            modifier = Modifier.align(Alignment.TopEnd),
+            options = listOf(weekDropdownOption, monthDropdownOption, allTimeDropdownOption),
+            default = weekDropdownOption
+        )
     }
 }

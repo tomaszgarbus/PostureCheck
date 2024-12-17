@@ -9,10 +9,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -27,7 +25,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.tgarbus.posturecheck.R
-import com.tgarbus.posturecheck.ui.TextStyles.Companion.h3
+import com.tgarbus.posturecheck.ui.TextStyles.Companion.h4
 
 data class DropdownOption(
     val text: String,
@@ -50,7 +48,7 @@ fun DropdownMenu(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(selected.value.text, style = h3.copy(colorResource(R.color.dark_green)))
+                Text(selected.value.text, style = h4.copy(colorResource(R.color.dark_green)))
                 Image(
                     painterResource(
                         if (isExpanded.value)
@@ -72,7 +70,7 @@ fun DropdownMenu(
                     for (option in options) {
                         Text(
                             option.text,
-                            style = h3.copy(colorResource(R.color.dark_green))
+                            style = h4.copy(colorResource(R.color.dark_green))
                         )
                         Spacer(modifier = Modifier
                             .height(1.dp).background(colorResource(R.color.no_answer)))
