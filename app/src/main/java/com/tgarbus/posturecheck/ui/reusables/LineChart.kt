@@ -5,7 +5,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -17,7 +16,7 @@ import androidx.compose.ui.graphics.drawscope.inset
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextOverflow
 import com.tgarbus.posturecheck.R
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.h4
 
@@ -52,7 +51,10 @@ fun LineChart(
         val yAxisLabelsWidth = yesTextMeasurement.size.width.toFloat()
         val xAxisLabelsHeight = size.height * 0.15f
 
-        inset(left = 0f, top = 0f, right = size.width - yAxisLabelsWidth, bottom = xAxisLabelsHeight) {
+        // Add some padding on the right so that the last label can fit.
+        val rightPadding = textMeasurer.measure(entries.last().label, textStyle).size.width / 2f
+
+        inset(left = 0f, top = 0f, right = size.width - yAxisLabelsWidth - rightPadding, bottom = xAxisLabelsHeight) {
             drawText(
                 textMeasurer = textMeasurer,
                 style = textStyle,
@@ -72,7 +74,7 @@ fun LineChart(
                 text = noText
             )
         }
-        inset(left = yAxisLabelsWidth, top = 0f, right = 0f, bottom = xAxisLabelsHeight) {
+        inset(left = yAxisLabelsWidth, top = 0f, right = rightPadding, bottom = xAxisLabelsHeight) {
             drawLine(
                 color = chartGuideLineColor,
                 start = Offset(0f, 0f),
@@ -135,12 +137,13 @@ fun LineChart(
                     val entry = entries[i]
                     val textMeasurement = textMeasurer.measure(entry.label, textStyle)
                     val offset = Offset(
-                        x = (i.toFloat() / (entries.size - 1)) * size.width,
+                        x = (i.toFloat() / (entries.size - 1)) * (size.width - rightPadding),
                         y = size.height / 2
                     )
                     drawText(
                         textMeasurer = textMeasurer,
                         style = textStyle,
+                        overflow = TextOverflow.Visible,
                         topLeft = Offset(
                             offset.x - textMeasurement.size.width / 2,
                             offset.y - textMeasurement.size.height / 2
