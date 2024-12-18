@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -22,11 +23,12 @@ import androidx.compose.ui.unit.dp
 import com.tgarbus.posturecheck.R
 
 @Composable
-fun NavigationButton(iconResource: Int, description: String, isActive: Boolean, action: () -> Unit) {
+fun NavigationButton(
+    iconResource: Int, description: String, isActive: Boolean, action: () -> Unit) {
     Box(modifier = Modifier
         .size(56.dp, 56.dp)
         .clip(RoundedCornerShape(32.dp))
-        .background(if (isActive) colorResource(R.color.mint) else Color.White)
+        .background(if (isActive) colorResource(R.color.mint) else Color.Transparent)
         .clickable { action() },
         contentAlignment = Alignment.Center
     ) {

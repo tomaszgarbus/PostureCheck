@@ -3,20 +3,20 @@ package com.tgarbus.posturecheck.data
 import android.content.Context
 import android.util.Log
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.PreferencesProto
 import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStore
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 val Context.pastChecksDataStore: DataStore<Preferences> by preferencesDataStore("PastChecksHistory")
 class PastChecksRepository(private val context: Context) {
-  private val idsKey: Preferences.Key<Set<String>> = stringSetPreferencesKey("past_posture_checks_ids")
+  private val idsPerDayKey: (Day) -> Preferences.Key<Set<String>> = { day -> stringSetPreferencesKey("past_posture_checks_ids_${day}") }
+  private val daysWithEntriesKey: Preferences.Key<Set<String>> = stringSetPreferencesKey("days_with_past_posture_checks")
   private val millisKey: (String) -> Preferences.Key<Long> = { pccId -> longPreferencesKey("${pccId}_millis") }
   private val replyKey: (String) -> Preferences.Key<String> = { pccId -> stringPreferencesKey("${pccId}_reply") }
 
@@ -30,48 +30,59 @@ class PastChecksRepository(private val context: Context) {
     )
   }
 
+  fun getDaysWithEntries(preferences: Preferences): Set<Day> {
+    val strs = preferences[daysWithEntriesKey] ?: HashSet()
+    return strs.map { str ->
+      Day.parseString(str)
+    }.toSet()
+  }
+
+  fun getDaysWithEntriesAsFlow(): Flow<Set<Day>> {
+    return context.pastChecksDataStore.data.map { preferences ->
+      getDaysWithEntries(preferences)
+    }
+  }
+
+  fun getChecksForDay(day: Day, preferences: Preferences): Set<PastPostureCheck> {
+    val idsForDay = preferences[idsPerDayKey(day)] ?: HashSet()
+    return idsForDay.map { id -> getPastPostureCheckById(id, preferences) }.toSet()
+  }
+
+  fun getChecksForDayAsFlow(day: Day): Flow<Set<PastPostureCheck>> {
+    return context.pastChecksDataStore.data.map { preferences ->
+      val idsForDay = preferences[idsPerDayKey(day)] ?: HashSet()
+      idsForDay.map { id -> getPastPostureCheckById(id, preferences) }.toSet()
+    }
+  }
+
   fun getPastChecksHistoryAsFlow(): Flow<Set<PastPostureCheck>> {
     return context.pastChecksDataStore.data.map { preferences ->
-      val pastChecks = HashSet<PastPostureCheck>()
-      val allIds: Set<String> = preferences[idsKey] ?: HashSet()
-      for (id in allIds) {
-        pastChecks.add(getPastPostureCheckById(id, preferences))
+      val allDays = getDaysWithEntries(preferences)
+      val allChecks = HashSet<PastPostureCheck>()
+      for (day in allDays) {
+        allChecks.addAll(getChecksForDay(day, preferences))
       }
-      Log.i("tomek", pastChecks.toString())
-      pastChecks
+      allChecks
     }
   }
 
-  private fun addIdToList(id: String, preferences: MutablePreferences) {
-    val ids: HashSet<String> = preferences[idsKey]?.let { HashSet(it) } ?: HashSet()
-    ids.add(id)
-    preferences[idsKey] = ids
-  }
+  private fun addIdToList(id: String, day: Day, preferences: MutablePreferences) {
+    // First, add id to list for that day.
+    val idsPerDay = preferences[idsPerDayKey(day)]?.let { HashSet(it) } ?: HashSet()
+    idsPerDay.add(id)
+    preferences[idsPerDayKey(day)] = idsPerDay
 
-  private fun addIdToList(ids: List<String>, preferences: MutablePreferences) {
-    val allIds: HashSet<String> = preferences[idsKey]?.let { HashSet(it) } ?: HashSet()
-    for (id in ids) {
-      allIds.add(id)
-    }
-    preferences[idsKey] = allIds
-  }
-
-  suspend fun addPastChecks(checks: ArrayList<PastPostureCheck>) {
-    context.pastChecksDataStore.edit { preferences ->
-      for (check in checks) {
-        preferences[millisKey(check.planned.id)] = check.planned.millis
-        preferences[replyKey(check.planned.id)] = check.reply.name
-      }
-      addIdToList(checks.map { it.planned.id }, preferences)
-      Log.i("tomek", preferences.toString())
-    }
+    // Now, update the list of days with events.
+    val daysWithEvents = preferences[daysWithEntriesKey]?.let { HashSet(it) } ?: HashSet()
+    daysWithEvents.add(day.toString())
+    preferences[daysWithEntriesKey] = daysWithEvents
   }
 
   suspend fun addPastCheck(pastPostureCheck: PastPostureCheck) {
     context.pastChecksDataStore.edit { preferences ->
       preferences[millisKey(pastPostureCheck.planned.id)] = pastPostureCheck.planned.millis
       preferences[replyKey(pastPostureCheck.planned.id)] = pastPostureCheck.reply.name
-      addIdToList(pastPostureCheck.planned.id, preferences)
+      addIdToList(pastPostureCheck.planned.id, pastPostureCheck.planned.getDay(), preferences)
       Log.i("tomek", preferences.toString())
     }
   }

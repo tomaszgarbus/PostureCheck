@@ -195,13 +195,13 @@ data class Day(
   operator fun plus(days: Int): Day {
     val calendar = toCalendar()
     calendar.add(Calendar.DAY_OF_MONTH, days)
-    return Day.fromMillis(calendar.timeInMillis)
+    return fromMillis(calendar.timeInMillis)
   }
 
   operator fun minus(days: Int): Day {
     val calendar = toCalendar()
     calendar.add(Calendar.DAY_OF_MONTH, -days)
-    return Day.fromMillis(calendar.timeInMillis)
+    return fromMillis(calendar.timeInMillis)
   }
 
   companion object {
@@ -212,6 +212,15 @@ data class Day(
         calendar.get(Calendar.DAY_OF_MONTH),
         calendar.get(Calendar.MONTH),
         calendar.get(Calendar.YEAR)
+      )
+    }
+
+    fun parseString(str: String): Day {
+      val components = str.split("-")
+      return Day(
+        year = components[0].toInt(),
+        month = components[1].toInt() - 1,
+        dayOfMonth = components[2].toInt()
       )
     }
 

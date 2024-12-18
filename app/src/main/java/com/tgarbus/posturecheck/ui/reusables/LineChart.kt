@@ -1,6 +1,5 @@
 package com.tgarbus.posturecheck.ui.reusables
 
-import android.graphics.DashPathEffect
 import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
@@ -10,7 +9,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.geometry.times
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -29,7 +27,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.toSize
 import com.tgarbus.posturecheck.R
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.h4
+import kotlin.math.max
 import kotlin.math.pow
+import kotlin.time.measureTime
 
 data class LineChartEntry(
     val value: Float,  // between 0 and 1
@@ -45,7 +45,6 @@ fun interpolateCubicBezierAtX(
 ): Offset {
     assert(p3.x > p0.x)
     val t = (x - p0.x) / (p3.x - p0.x)
-    Log.d("tomek", "t: ${t} ${p0 * (1f - t).pow(3f)} ${p0}")
     return (p0 * (1f - t).pow(3f)
             + p1 * 3f * t * (1f - t).pow(2f)
             + p2 * 3f * t.pow(2) * (1f - t)
@@ -72,7 +71,6 @@ fun LineChart(
             awaitPointerEventScope {
                 while (true) {
                     val event = awaitPointerEvent()
-                    Log.d("tomek", "${event.type} ${event.changes}")
                     if (event.type == PointerEventType.Release) {
                         touchOffset.value = null
                     }
@@ -83,185 +81,220 @@ fun LineChart(
             }
         }
     ) {
-        Log.d("tomek", "size1 ${size}")
+        val timeTaken = measureTime {
+            val yesText = "Yes"
+            val noText = "No"
+            val textStyle = h4.copy(color = chartGuideLineColor)
+            val yesTextMeasurement = textMeasurer.measure(yesText, textStyle)
+            val noTextMeasurement = textMeasurer.measure(noText, textStyle)
 
-        val yesText = "Yes"
-        val noText = "No"
-        val textStyle = h4.copy(color = chartGuideLineColor)
-        val yesTextMeasurement = textMeasurer.measure(yesText, textStyle)
-        val noTextMeasurement = textMeasurer.measure(noText, textStyle)
+            val yAxisLabelsWidth = yesTextMeasurement.size.width.toFloat()
+            val xAxisLabelsHeight = size.height * 0.15f
 
-        val yAxisLabelsWidth = yesTextMeasurement.size.width.toFloat()
-        val xAxisLabelsHeight = size.height * 0.15f
+            // Add some padding on the right so that the last label can fit.
+            val rightPadding = textMeasurer.measure(entries.last().label, textStyle).size.width / 2f
 
-        // Add some padding on the right so that the last label can fit.
-        val rightPadding = textMeasurer.measure(entries.last().label, textStyle).size.width / 2f
-
-        // Y Axis labels.
-        inset(left = 0f, top = 0f, right = size.width - yAxisLabelsWidth - rightPadding, bottom = xAxisLabelsHeight) {
-            drawText(
-                textMeasurer = textMeasurer,
-                style = textStyle,
-                topLeft = Offset(
-                    0f,
-                    0f - yesTextMeasurement.size.height / 2,
-                ),
-                text = yesText
-            )
-            drawText(
-                textMeasurer = textMeasurer,
-                style = textStyle,
-                topLeft = Offset(
-                    0f,
-                    size.height / 2 - noTextMeasurement.size.height / 2,
-                ),
-                text = noText
-            )
-        }
-        // Chart
-        inset(left = yAxisLabelsWidth, top = 0f, right = rightPadding, bottom = xAxisLabelsHeight) {
-            // Draw guiding lines.
-            drawLine(
-                color = chartGuideLineColor,
-                start = Offset(0f, 0f),
-                end = Offset(size.width, 0f)
-            )
-            drawLine(
-                color = chartGuideLineColor,
-                start = Offset(0f, size.height / 2),
-                end = Offset(size.width, size.height / 2)
-            )
-            drawLine(
-                color = chartGuideLineColor,
-                start = Offset(0f, size.height),
-                end = Offset(size.width, size.height)
-            )
-            // Map entries to coordinate points through which we guide the Bezier curves (ends of
-            // Bezier curves to be exact).
-            val entryValueToOffset: (value: Float, idx: Int) -> Offset = {
-                    value, idx ->
-                Offset(
-                    x = (idx.toFloat() / (entries.size - 1)) * size.width,
-                    y = (size.height / 2) * value
+            // Y Axis labels.
+            inset(
+                left = 0f,
+                top = 0f,
+                right = size.width - yAxisLabelsWidth - rightPadding,
+                bottom = xAxisLabelsHeight
+            ) {
+                drawText(
+                    textMeasurer = textMeasurer,
+                    style = textStyle,
+                    topLeft = Offset(
+                        0f,
+                        0f - yesTextMeasurement.size.height / 2,
+                    ),
+                    text = yesText
+                )
+                drawText(
+                    textMeasurer = textMeasurer,
+                    style = textStyle,
+                    topLeft = Offset(
+                        0f,
+                        size.height / 2 - noTextMeasurement.size.height / 2,
+                    ),
+                    text = noText
                 )
             }
-            // Draw the path.
-            val path = Path()
-            val startX = entryValueToOffset(entries[0].value, 0).x
-            val startY = entryValueToOffset(entries[0].value, 0).y
-            var curX = startX
-            var curY = startY
-            path.moveTo(curX, curY)
-            for (i in 1..<entries.size) {
-                val nextX = entryValueToOffset(entries[i].value, i).x
-                val nextY = entryValueToOffset(entries[i].value, i).y
-                path.cubicTo(
-                    (curX + nextX) / 2, curY,
-                    (curX + nextX) / 2, nextY,
-                    nextX, nextY)
-                curX = nextX
-                curY = nextY
-            }
-            // Close the loop and fill with gradient.
-            val closedPath = path.copy()
-            closedPath.lineTo(size.width, size.height)
-            closedPath.lineTo(0f, size.height)
-            closedPath.lineTo(startX, startY)
-            drawPath(
-                closedPath,
-                brush = Brush.verticalGradient(gradientColors, startY = 0f, endY = size.height)
-            )
-            // Finally, stroke the path.
-            drawPath(
-                path,
-                color = lineChartColor,
-                style = Stroke(
-                    width = 5f,
-                    cap = StrokeCap.Round,
-                    join = StrokeJoin.Round,
-                )
-            )
-
-            if (
-                touchOffset.value != null
-                && touchOffset.value!!.x >= yAxisLabelsWidth
-                && touchOffset.value!!.x - yAxisLabelsWidth <= size.width) {
-                val touchX = touchOffset.value!!.x - yAxisLabelsWidth
-                // Find the closest entry index on the left.
-                var previousEntryIndex = 0
-                while (
-                    previousEntryIndex + 1 < entries.size
-                    && entryValueToOffset(entries[previousEntryIndex].value, previousEntryIndex + 1).x < touchX) {
-                    previousEntryIndex++
-                }
-                // Determine touchY at the touchX.
-                val leftPointOffset = entryValueToOffset(
-                    entries[previousEntryIndex].value, previousEntryIndex)
-                var touchY = leftPointOffset.y
-                if (previousEntryIndex + 1 < entries.size) {
-                    val rightPointOffset = entryValueToOffset(
-                        entries[previousEntryIndex + 1].value, previousEntryIndex + 1)
-                    touchY = interpolateCubicBezierAtX(
-                        p0 = leftPointOffset,
-                        p1 = Offset((leftPointOffset.x + rightPointOffset.x) / 2, leftPointOffset.y),
-                        p2 = Offset((leftPointOffset.x + rightPointOffset.x) / 2, rightPointOffset.y),
-                        p3 = rightPointOffset,
-                        x = touchX
-                    ).y
-                }
-                // Draw the vertical line.
+            // Chart
+            inset(
+                left = yAxisLabelsWidth,
+                top = 0f,
+                right = rightPadding,
+                bottom = xAxisLabelsHeight
+            ) {
+                // Draw guiding lines.
                 drawLine(
-                    color = lineChartColor,
-                    start = Offset(x = touchX, 0f),
-                    end = Offset(x = touchX, size.height),
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f),
-                    strokeWidth = 5f,
+                    color = chartGuideLineColor,
+                    start = Offset(0f, 0f),
+                    end = Offset(size.width, 0f)
                 )
-                drawCircle(
-                    color = Color.White,
-                    center = Offset(touchX, touchY),
-                    radius = 10f,
+                drawLine(
+                    color = chartGuideLineColor,
+                    start = Offset(0f, size.height / 2),
+                    end = Offset(size.width, size.height / 2)
                 )
-                drawCircle(
+                drawLine(
+                    color = chartGuideLineColor,
+                    start = Offset(0f, size.height),
+                    end = Offset(size.width, size.height)
+                )
+                // Map entries to coordinate points through which we guide the Bezier curves (ends of
+                // Bezier curves to be exact).
+                val entryValueToOffset: (value: Float, idx: Int) -> Offset = { value, idx ->
+                    Offset(
+                        x = (idx.toFloat() / (entries.size - 1)) * size.width,
+                        y = (size.height / 2) * value
+                    )
+                }
+                // Compute entry values to offsets:
+                val entryOffsets = ArrayList(
+                    entries.mapIndexed {idx, entry -> entryValueToOffset(entry.value, idx) })
+                // Draw the path.
+                val path = Path()
+                val startX = entryOffsets[0].x
+                val startY = entryOffsets[0].y
+                var curX = startX
+                var curY = startY
+                path.moveTo(curX, curY)
+                for (i in 1..<entries.size) {
+                    val nextX = entryOffsets[i].x
+                    val nextY = entryOffsets[i].y
+                    path.cubicTo(
+                        (curX + nextX) / 2, curY,
+                        (curX + nextX) / 2, nextY,
+                        nextX, nextY
+                    )
+                    curX = nextX
+                    curY = nextY
+                }
+                // Close the loop and fill with gradient.
+                val closedPath = path.copy()
+                closedPath.lineTo(size.width, size.height)
+                closedPath.lineTo(0f, size.height)
+                closedPath.lineTo(startX, startY)
+                drawPath(
+                    closedPath,
+                    brush = Brush.verticalGradient(gradientColors, startY = 0f, endY = size.height)
+                )
+                // Finally, stroke the path.
+                drawPath(
+                    path,
                     color = lineChartColor,
-                    center = Offset(touchX, touchY),
-                    radius = 10f,
                     style = Stroke(
                         width = 5f,
                         cap = StrokeCap.Round,
                         join = StrokeJoin.Round,
                     )
                 )
-                // Draw Round Rectangle to the left or right of the moving line.
-                val popupText = "80% straight"
-                val textMeasuredSize = textMeasurer.measure(popupText, textStyle).size.toSize()
-                val rectPad = 10f
-                val rectSize = Size(
-                    textMeasuredSize.width + rectPad * 2,
-                    textMeasuredSize.height + rectPad * 2)
-                var rectTopLeft = Offset(x = touchX + 10f, y = touchY)
-                if (rectTopLeft.x + textMeasuredSize.width + 10f >= size.width) {
-                    rectTopLeft = Offset(
-                        x = touchX - rectSize.width - 10f,
-                        y = touchY
+
+                if (
+                    touchOffset.value != null
+                    && touchOffset.value!!.x >= yAxisLabelsWidth
+                    && touchOffset.value!!.x - yAxisLabelsWidth <= size.width
+                ) {
+                    val touchX = touchOffset.value!!.x - yAxisLabelsWidth
+                    // Find the closest entry index on the left.
+                    var previousEntryIndex = 0
+                    while (
+                        previousEntryIndex + 1 < entries.size
+                        && entryOffsets[previousEntryIndex + 1].x < touchX
+                    ) {
+                        previousEntryIndex++
+                    }
+                    // Determine touchY at the touchX.
+                    val leftPointOffset = entryOffsets[previousEntryIndex]
+                    var touchY = leftPointOffset.y
+                    if (previousEntryIndex + 1 < entries.size) {
+                        val rightPointOffset = entryOffsets[previousEntryIndex + 1]
+                        touchY = interpolateCubicBezierAtX(
+                            p0 = leftPointOffset,
+                            p1 = Offset(
+                                (leftPointOffset.x + rightPointOffset.x) / 2,
+                                leftPointOffset.y
+                            ),
+                            p2 = Offset(
+                                (leftPointOffset.x + rightPointOffset.x) / 2,
+                                rightPointOffset.y
+                            ),
+                            p3 = rightPointOffset,
+                            x = touchX
+                        ).y
+                    }
+                    // Draw the vertical line.
+                    drawLine(
+                        color = lineChartColor,
+                        start = Offset(x = touchX, 0f),
+                        end = Offset(x = touchX, size.height),
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f),
+                        strokeWidth = 5f,
+                    )
+                    drawCircle(
+                        color = Color.White,
+                        center = Offset(touchX, touchY),
+                        radius = 10f,
+                    )
+                    drawCircle(
+                        color = lineChartColor,
+                        center = Offset(touchX, touchY),
+                        radius = 10f,
+                        style = Stroke(
+                            width = 5f,
+                            cap = StrokeCap.Round,
+                            join = StrokeJoin.Round,
+                        )
+                    )
+                    // Find closest entry.
+                    var closestEntry = entries[previousEntryIndex]
+                    if (previousEntryIndex + 1 < entries.size) {
+                        val rightPointOffset = entryOffsets[previousEntryIndex + 1]
+                        if (rightPointOffset.x - touchX < touchX - leftPointOffset.x) {
+                            closestEntry = entries[previousEntryIndex + 1]
+                        }
+                    }
+                    // Draw Round Rectangle to the left or right of the moving line.
+                    val popupText = "${closestEntry.label}: ${closestEntry.value}"
+                    val textMeasuredSize = textMeasurer.measure(popupText, textStyle).size.toSize()
+                    val rectPad = 10f
+                    val rectSize = Size(
+                        textMeasuredSize.width + rectPad * 2,
+                        textMeasuredSize.height + rectPad * 2
+                    )
+                    val rectTop = max(0f, touchY - rectSize.height / 2)
+                    var rectTopLeft = Offset(
+                        x = touchX + 20f, y = rectTop
+                    )
+                    if (rectTopLeft.x + textMeasuredSize.width + 30f >= size.width) {
+                        rectTopLeft = Offset(
+                            x = touchX - rectSize.width - 20f,
+                            y = rectTop
+                        )
+                    }
+                    drawRoundRect(
+                        color = rectTooltipColor,
+                        topLeft = rectTopLeft,
+                        cornerRadius = CornerRadius(17f, 17f),
+                        size = rectSize
+                    )
+                    drawText(
+                        textMeasurer = textMeasurer,
+                        text = popupText,
+                        style = textStyle.copy(color = lineChartColor),
+                        topLeft = rectTopLeft + Offset(rectPad, rectPad),
                     )
                 }
-                drawRoundRect(
-                    color = rectTooltipColor,
-                    topLeft = rectTopLeft,
-                    cornerRadius = CornerRadius(17f, 17f),
-                    size = rectSize
-                )
-                drawText(
-                    textMeasurer = textMeasurer,
-                    text = popupText,
-                    style = textStyle.copy(color = lineChartColor),
-                    topLeft = rectTopLeft + Offset(rectPad, rectPad),
-                )
             }
-        }
-        // X Axis labels
-        inset(left = yAxisLabelsWidth, top = size.height - xAxisLabelsHeight, right = 0f, bottom = 0f) {
+            // X Axis labels
+            inset(
+                left = yAxisLabelsWidth,
+                top = size.height - xAxisLabelsHeight,
+                right = 0f,
+                bottom = 0f
+            ) {
                 for (i in 0..<entries.size) {
                     val entry = entries[i]
                     val textMeasurement = textMeasurer.measure(entry.label, textStyle)
@@ -281,5 +314,7 @@ fun LineChart(
                     )
                 }
             }
+        }
+        Log.d("tomek", "timeTaken: ${timeTaken}")
     }
 }
