@@ -1,5 +1,7 @@
 package com.tgarbus.posturecheck.ui.views
 
+import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -23,6 +25,7 @@ import androidx.compose.material3.RichTooltipState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -30,17 +33,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tgarbus.posturecheck.R
+import com.tgarbus.posturecheck.data.AnswersDistribution
 import com.tgarbus.posturecheck.data.Day
 import com.tgarbus.posturecheck.data.PastPostureCheck
 import com.tgarbus.posturecheck.data.PostureCheckReply
 import com.tgarbus.posturecheck.data.StatisticsViewModel
+import com.tgarbus.posturecheck.data.buildAnswersDistribution
+import com.tgarbus.posturecheck.data.buildLastWeekChartEntries
+import com.tgarbus.posturecheck.data.lastWeek
+import com.tgarbus.posturecheck.data.percentBad
+import com.tgarbus.posturecheck.data.percentGood
+import com.tgarbus.posturecheck.data.percentNoAnswer
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.h4
 import com.tgarbus.posturecheck.ui.reusables.CircularGraph
 import com.tgarbus.posturecheck.ui.reusables.CircularGraphComponent
@@ -170,7 +182,7 @@ fun SummaryEntry(
 }
 
 @Composable
-fun Summary() {
+fun Summary(answersDistribution: AnswersDistribution) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -183,9 +195,14 @@ fun Summary() {
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(22.dp)
         ) {
-            SummaryEntry(60, "Straight posture", colorResource(R.color.accent_yellow))
-            SummaryEntry(23, "Slouching", colorResource(R.color.dark_green), textColor = Color.White)
-            SummaryEntry(17, "No answer", colorResource(R.color.light_mint))
+            SummaryEntry(
+                answersDistribution.percentGood(),
+                "Straight posture", colorResource(R.color.accent_yellow))
+            SummaryEntry(
+                answersDistribution.percentBad(),
+                "Slouching", colorResource(R.color.dark_green), textColor = Color.White)
+            SummaryEntry(answersDistribution.percentNoAnswer(),
+                "No answer", colorResource(R.color.light_mint))
         }
         Box(
             modifier = Modifier.weight(1f).aspectRatio(1f),
@@ -194,9 +211,12 @@ fun Summary() {
             CircularGraph(
                 canvasModifier = Modifier.fillMaxSize(),
                 entries = listOf(
-                    CircularGraphComponent(60, colorResource(R.color.accent_yellow)),
-                    CircularGraphComponent(23, colorResource(R.color.dark_green)),
-                    CircularGraphComponent(17, colorResource(R.color.light_mint)),
+                    CircularGraphComponent(
+                        answersDistribution.percentGood(), colorResource(R.color.accent_yellow)),
+                    CircularGraphComponent(
+                        answersDistribution.percentBad(), colorResource(R.color.dark_green)),
+                    CircularGraphComponent(
+                        answersDistribution.percentNoAnswer(), colorResource(R.color.light_mint)),
                 ))
             Column(
                 modifier = Modifier.wrapContentSize(),
@@ -204,7 +224,7 @@ fun Summary() {
                 verticalArrangement = Arrangement.Center) {
                 Row(modifier = Modifier.wrapContentSize()) {
                     Text(
-                        "60",
+                        "${answersDistribution.percentGood()}",
                         style = h4.copy(color = Color.White, fontSize = 32.sp),
                         modifier = Modifier.alignByBaseline())
                     Text(
@@ -220,7 +240,7 @@ fun Summary() {
 }
 
 @Composable
-fun LineChartDisplay() {
+fun LineChartDisplay(entries: ArrayList<LineChartEntry>) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -231,16 +251,54 @@ fun LineChartDisplay() {
         horizontalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         LineChart(
-            ArrayList(listOf(
-                LineChartEntry(value = 1f, label = "Mon"),
-                LineChartEntry(value = 0.8f, label = "Tue"),
-                LineChartEntry(value = 0.5f, label = "Wed"),
-                LineChartEntry(value = 1f, label = "Thu"),
-                LineChartEntry(value = 0f, label = "Fri"),
-                LineChartEntry(value = 0.3f, label = "Sat"),
-                LineChartEntry(value = 1f, label = "Sun"),
-            )),
-            canvasModifier = Modifier.fillMaxSize())
+            entries, canvasModifier = Modifier.fillMaxSize())
+    }
+}
+
+@Composable
+fun ChartTypeSwitcherOption(
+    painter: Painter,
+    text: String,
+    active: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(22.dp))
+            .background(if (active) colorResource(R.color.mint) else Color.Transparent)
+            .clickable { onClick() }
+            .padding(13.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Image(painter, text, modifier = Modifier.size(14.dp))
+        Text(text, style = h4.copy(colorResource(R.color.dark_green)))
+    }
+}
+
+enum class ChartType {
+    LINE,
+    GRID
+}
+
+@Composable
+fun ChartTypeSwitcher(
+    onLineChartSelected: () -> Unit,
+    onGridChartSelected: () -> Unit,
+) {
+    val activeChartType = remember { mutableStateOf(ChartType.LINE) }
+    Row(modifier = Modifier
+        .clip(RoundedCornerShape(38.dp))
+        .background(Color.White)
+        .padding(5.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        ChartTypeSwitcherOption(
+            painterResource(R.drawable.line_chart), "Line chart",
+            activeChartType.value == ChartType.LINE,
+            { activeChartType.value = ChartType.LINE })
+        ChartTypeSwitcherOption(
+            painterResource(R.drawable.grid_chart), "Grid chart",
+            activeChartType.value == ChartType.GRID,
+            { activeChartType.value = ChartType.GRID })
     }
 }
 
@@ -248,14 +306,31 @@ fun LineChartDisplay() {
 fun StatisticsPage(
     viewModel: StatisticsViewModel = viewModel(),
 ) {
-    val pastChecks = viewModel.getPastPostureChecks(LocalContext.current).collectAsState(HashSet())
     val weekDropdownOption = DropdownOption(text = "Week", onSelect = {})
     val monthDropdownOption = DropdownOption(text = "Month", onSelect = {})
     val allTimeDropdownOption = DropdownOption(text = "All time", onSelect = {})
-    ScrollableFullScreenColumn(headerHeight = 86.dp) {
-        Summary()
-        Spacer(modifier = Modifier.height(20.dp))
-        LineChartDisplay()
+    val pastChecks = viewModel.getPastPostureChecks(
+        LocalContext.current, lastWeek(false)).collectAsState(HashSet())
+    val answersDistribution = buildAnswersDistribution(
+        pastChecks.value
+    )
+    val lastWeekChartEntries = buildLastWeekChartEntries(pastChecks.value, false)
+    Log.d("tomek", "Last week days: ${lastWeek(false)}")
+    ScrollableFullScreenColumn(
+        headerHeight = 86.dp,
+        verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        if (answersDistribution != null) {
+            Summary(answersDistribution)
+        }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            ChartTypeSwitcher(
+                onLineChartSelected = {},
+                onGridChartSelected = {}
+            )
+        }
+        if (lastWeekChartEntries != null) {
+            LineChartDisplay(lastWeekChartEntries)
+        }
         // PageHeader("Statistics")
         // ActivityGraph(pastChecks.value)
     }

@@ -43,7 +43,7 @@ class PastChecksRepository(private val context: Context) {
     }
   }
 
-  fun getChecksForDay(day: Day, preferences: Preferences): Set<PastPostureCheck> {
+  private fun getChecksForDay(day: Day, preferences: Preferences): Set<PastPostureCheck> {
     val idsForDay = preferences[idsPerDayKey(day)] ?: HashSet()
     return idsForDay.map { id -> getPastPostureCheckById(id, preferences) }.toSet()
   }
@@ -52,6 +52,17 @@ class PastChecksRepository(private val context: Context) {
     return context.pastChecksDataStore.data.map { preferences ->
       val idsForDay = preferences[idsPerDayKey(day)] ?: HashSet()
       idsForDay.map { id -> getPastPostureCheckById(id, preferences) }.toSet()
+    }
+  }
+
+  fun getChecksForDaysAsFlow(days: Collection<Day>): Flow<Set<PastPostureCheck>> {
+    return context.pastChecksDataStore.data.map { preferences ->
+      val result = HashSet<PastPostureCheck>()
+      for (day in days) {
+        val idsForDay = preferences[idsPerDayKey(day)] ?: HashSet()
+        result.addAll(idsForDay.map { id -> getPastPostureCheckById(id, preferences) })
+      }
+      result
     }
   }
 
@@ -83,7 +94,6 @@ class PastChecksRepository(private val context: Context) {
       preferences[millisKey(pastPostureCheck.planned.id)] = pastPostureCheck.planned.millis
       preferences[replyKey(pastPostureCheck.planned.id)] = pastPostureCheck.reply.name
       addIdToList(pastPostureCheck.planned.id, pastPostureCheck.planned.getDay(), preferences)
-      Log.i("tomek", preferences.toString())
     }
   }
 }

@@ -148,7 +148,7 @@ fun LineChart(
                 val entryValueToOffset: (value: Float, idx: Int) -> Offset = { value, idx ->
                     Offset(
                         x = (idx.toFloat() / (entries.size - 1)) * size.width,
-                        y = (size.height / 2) * value
+                        y = (size.height / 2) * (1 - value)
                     )
                 }
                 // Compute entry values to offsets:

@@ -1,6 +1,7 @@
 package com.tgarbus.posturecheck.ui.reusables
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -18,6 +19,7 @@ import com.tgarbus.posturecheck.R
 fun ScrollableFullScreenColumn(
     headerHeight: Dp = 0.dp,
     modifier: Modifier = Modifier,
+    verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     content: @Composable () -> Unit
 ) {
     Column(
@@ -31,7 +33,8 @@ fun ScrollableFullScreenColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
-                .padding(20.dp)
+                .padding(20.dp),
+            verticalArrangement = verticalArrangement,
         ) {
             content()
         }

@@ -1,6 +1,7 @@
 package com.tgarbus.posturecheck.data
 
 import android.os.Bundle
+import android.util.Log
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.UUID
@@ -180,6 +181,10 @@ data class Day(
     return "${year}-${month + 1}-${dayOfMonth}"
   }
 
+  fun toShortString(): String {
+    return "${year}-${month + 1}"
+  }
+
   private fun toCalendar(): Calendar {
     val calendar = Calendar.getInstance()
     calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
@@ -202,6 +207,21 @@ data class Day(
     val calendar = toCalendar()
     calendar.add(Calendar.DAY_OF_MONTH, -days)
     return fromMillis(calendar.timeInMillis)
+  }
+
+  fun getDayOfWeek(): String {
+    val cal = toCalendar()
+    Log.d("tomek", "Debugging day of week: $this: $cal")
+    return when (cal.get(Calendar.DAY_OF_WEEK)) {
+      Calendar.MONDAY -> "Mon"
+      Calendar.TUESDAY -> "Tue"
+      Calendar.WEDNESDAY -> "Wed"
+      Calendar.THURSDAY -> "Thu"
+      Calendar.FRIDAY -> "Fri"
+      Calendar.SATURDAY -> "Sat"
+      Calendar.SUNDAY -> "Sun"
+      else -> "???"
+    }
   }
 
   companion object {
