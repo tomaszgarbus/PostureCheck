@@ -30,29 +30,17 @@ class PastChecksRepository(private val context: Context) {
     )
   }
 
-  fun getDaysWithEntries(preferences: Preferences): Set<Day> {
+  private fun getDaysWithEntries(preferences: Preferences): Set<Day> {
     val strs = preferences[daysWithEntriesKey] ?: HashSet()
     return strs.map { str ->
       Day.parseString(str)
     }.toSet()
   }
 
-  fun getDaysWithEntriesAsFlow(): Flow<Set<Day>> {
-    return context.pastChecksDataStore.data.map { preferences ->
-      getDaysWithEntries(preferences)
-    }
-  }
-
   private fun getChecksForDay(day: Day, preferences: Preferences): Set<PastPostureCheck> {
     val idsForDay = preferences[idsPerDayKey(day)] ?: HashSet()
+    Log.d("tomek", "Debuggging getChecksForDay: $day, $idsForDay")
     return idsForDay.map { id -> getPastPostureCheckById(id, preferences) }.toSet()
-  }
-
-  fun getChecksForDayAsFlow(day: Day): Flow<Set<PastPostureCheck>> {
-    return context.pastChecksDataStore.data.map { preferences ->
-      val idsForDay = preferences[idsPerDayKey(day)] ?: HashSet()
-      idsForDay.map { id -> getPastPostureCheckById(id, preferences) }.toSet()
-    }
   }
 
   fun getChecksForDaysAsFlow(days: Collection<Day>): Flow<Set<PastPostureCheck>> {
@@ -70,9 +58,11 @@ class PastChecksRepository(private val context: Context) {
     return context.pastChecksDataStore.data.map { preferences ->
       val allDays = getDaysWithEntries(preferences)
       val allChecks = HashSet<PastPostureCheck>()
+      Log.d("tomek", "Debug preferences: $preferences")
       for (day in allDays) {
         allChecks.addAll(getChecksForDay(day, preferences))
       }
+      Log.d("tomek", "Found checks: $allChecks")
       allChecks
     }
   }

@@ -33,7 +33,8 @@ import kotlin.time.measureTime
 
 data class LineChartEntry(
     val value: Float,  // between 0 and 1
-    val label: String
+    val label: String,
+    val showLabelOnAxis: Boolean = true,
 )
 
 fun interpolateCubicBezierAtX(
@@ -296,6 +297,9 @@ fun LineChart(
                 bottom = 0f
             ) {
                 for (i in 0..<entries.size) {
+                    if (!entries[i].showLabelOnAxis) {
+                        continue
+                    }
                     val entry = entries[i]
                     val textMeasurement = textMeasurer.measure(entry.label, textStyle)
                     val offset = Offset(

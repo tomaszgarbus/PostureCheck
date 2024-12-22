@@ -178,11 +178,11 @@ data class Day(
   }
 
   override fun toString(): String {
-    return "${year}-${month + 1}-${dayOfMonth}"
+    return "${dayOfMonth}-${month + 1}-${year}"
   }
 
   fun toShortString(): String {
-    return "${year}-${month + 1}"
+    return "${dayOfMonth}.${month + 1}"
   }
 
   private fun toCalendar(): Calendar {
@@ -238,9 +238,9 @@ data class Day(
     fun parseString(str: String): Day {
       val components = str.split("-")
       return Day(
-        year = components[0].toInt(),
+        dayOfMonth = components[0].toInt(),
         month = components[1].toInt() - 1,
-        dayOfMonth = components[2].toInt()
+        year = components[2].toInt()
       )
     }
 
@@ -252,10 +252,10 @@ data class Day(
       // The range is inclusive on both ends.
       var day = firstDay
       val result = ArrayList<Day>()
-      do {
+      while (day <= lastDay) {
         result.add(day)
         day += 1
-      } while (day != lastDay)
+      }
       return result
     }
   }

@@ -2,6 +2,7 @@ package com.tgarbus.posturecheck.ui.views
 
 import android.util.Log
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,12 +15,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tgarbus.posturecheck.data.SettingsViewModel
 import com.tgarbus.posturecheck.data.TimeOfDay
 import com.tgarbus.posturecheck.data.kDefaultEarliestNotificationTime
 import com.tgarbus.posturecheck.data.kDefaultLatestNotificationTime
 import com.tgarbus.posturecheck.ui.reusables.PageHeader
+import com.tgarbus.posturecheck.ui.reusables.ScrollableFullScreenColumn
 import com.tgarbus.posturecheck.ui.reusables.TimePickerDialog
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -54,13 +57,15 @@ fun SettingsPage(
     val latestNotificationTime = viewModel.getLatestNotificationTime(context).collectAsState(
         TimeOfDay.fromPreferencesStorageFormat(kDefaultLatestNotificationTime))
 
-    val showEarliestTimePicker = remember { mutableStateOf<Boolean>(false) }
-    val showLatestTimePicker = remember { mutableStateOf<Boolean>(false) }
+    val showEarliestTimePicker = remember { mutableStateOf(false) }
+    val showLatestTimePicker = remember { mutableStateOf(false) }
 
-    Column {
-        PageHeader("Settings")
+    ScrollableFullScreenColumn (
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        PageHeader("Settings", "Your notifications preferences")
 
-        SettingsItem("Notifications per day: ${notificationsPerDayLocal.intValue}") {
+        SettingsItem("Number of notifications per day") {
             Slider(
                 value = notificationsPerDayLocal.intValue.toFloat(),
                 onValueChange = {

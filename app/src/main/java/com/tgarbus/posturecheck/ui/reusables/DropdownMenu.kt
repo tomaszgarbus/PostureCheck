@@ -1,6 +1,8 @@
 package com.tgarbus.posturecheck.ui.reusables
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,8 +11,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -37,10 +41,11 @@ fun DropdownMenu(
     modifier: Modifier = Modifier, options: List<DropdownOption>, default: DropdownOption) {
     val isExpanded = remember { mutableStateOf(false) }
     val selected = remember { mutableStateOf(default) }
-    Box(modifier) {
+    Box(modifier.width(108.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(
                 modifier = Modifier
+                    .width(108.dp)
                     .clip(RoundedCornerShape(45.dp))
                     .clickable { isExpanded.value = !isExpanded.value }
                     .background(Color.White)
@@ -59,21 +64,39 @@ fun DropdownMenu(
             }
 
             AnimatedVisibility(
-                visible = isExpanded.value) {
+                visible = isExpanded.value,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
                 Column (modifier = Modifier
                     .clip(RoundedCornerShape(14.dp))
                     .background(Color.White)
-                    .padding(10.dp)
-                    .wrapContentWidth(),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    .fillMaxWidth()
+                    .padding(vertical = 5.dp),
                 ) {
                     for (option in options) {
-                        Text(
-                            option.text,
-                            style = h4.copy(colorResource(R.color.dark_green))
-                        )
-                        Spacer(modifier = Modifier
-                            .height(1.dp).background(colorResource(R.color.no_answer)))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selected.value = option
+                                    option.onSelect()
+                                }
+                                .padding(10.dp)
+                        ) {
+                            Text(
+                                option.text,
+                                style = h4.copy(colorResource(R.color.dark_green))
+                            )
+                        }
+                        if (option != options.last()) {
+                            Spacer(
+                                modifier = Modifier
+                                    .height(0.5.dp).fillMaxWidth().padding(horizontal = 10.dp).background(
+                                        colorResource(R.color.spacer_grey)
+                                    )
+                            )
+                        }
                     }
                 }
             }

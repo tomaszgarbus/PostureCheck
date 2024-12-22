@@ -45,9 +45,12 @@ import com.tgarbus.posturecheck.R
 import com.tgarbus.posturecheck.data.AnswersDistribution
 import com.tgarbus.posturecheck.data.Day
 import com.tgarbus.posturecheck.data.PastPostureCheck
+import com.tgarbus.posturecheck.data.PeriodType
 import com.tgarbus.posturecheck.data.PostureCheckReply
 import com.tgarbus.posturecheck.data.StatisticsViewModel
 import com.tgarbus.posturecheck.data.buildAnswersDistribution
+import com.tgarbus.posturecheck.data.buildChartEntriesForDays
+import com.tgarbus.posturecheck.data.buildChartEntriesForPeriod
 import com.tgarbus.posturecheck.data.buildLastWeekChartEntries
 import com.tgarbus.posturecheck.data.lastWeek
 import com.tgarbus.posturecheck.data.percentBad
@@ -62,6 +65,7 @@ import com.tgarbus.posturecheck.ui.reusables.LineChart
 import com.tgarbus.posturecheck.ui.reusables.LineChartEntry
 import com.tgarbus.posturecheck.ui.reusables.ScrollableFullScreenColumn
 import kotlinx.coroutines.launch
+import java.time.Period
 import kotlin.math.max
 
 // https://stackoverflow.com/questions/70057396/how-to-show-vertical-text-with-proper-size-layout-in-jetpack-compose
@@ -78,85 +82,6 @@ fun Modifier.rotateVertically(clockwise: Boolean = true): Modifier {
         }
     }
     return rotate then adjustBounds
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ActivityGraph(checks: Set<PastPostureCheck>) {
-    val scrollState = rememberScrollState()
-    val scope = rememberCoroutineScope()
-    Row(
-        modifier = Modifier.horizontalScroll(scrollState, reverseScrolling = true),
-        verticalAlignment = Alignment.Top
-    ) {
-        // Group checks by day.
-        val groupedByDay = HashMap<Day, ArrayList<PastPostureCheck>>()
-        for (check in checks) {
-            val day = check.planned.getDay()
-            if (!groupedByDay.contains(day)) {
-                groupedByDay[day] = ArrayList()
-            }
-            groupedByDay[day]!!.add(check)
-        }
-        var highestCountPerDay = 0
-        for (day in groupedByDay.keys) {
-            groupedByDay[day]!!.sortBy { it.planned.getTimeOfDay() }
-            highestCountPerDay = max(highestCountPerDay, groupedByDay[day]!!.size)
-        }
-
-
-        val colorMapping: HashMap<PostureCheckReply, Int> = hashMapOf(
-            PostureCheckReply.GOOD to R.color.good_answer,
-            PostureCheckReply.BAD to R.color.bad_answer,
-            PostureCheckReply.NO_ANSWER to R.color.no_answer,
-            PostureCheckReply.NOT_APPLICABLE to R.color.no_answer
-        )
-
-        for (day in groupedByDay.keys.sorted()) {
-            Column {
-                // Add padding
-                for (i in 1..highestCountPerDay - groupedByDay[day]!!.size) {
-                    Box(
-                        modifier = Modifier
-                            .size(30.dp)
-                            .padding(3.dp)
-                            .background(
-                                Color.Transparent,
-                                RoundedCornerShape(3.dp)
-                            )
-                    )
-                }
-                for (check in groupedByDay[day]!!) {
-                    val tooltipState = remember { RichTooltipState() }
-                    RichTooltipBox(
-                        text = { Text("${day}, ${check.planned.getTimeOfDay()}") },
-                        tooltipState = tooltipState
-                    ) {
-                        val highlighted = tooltipState.isVisible.compareTo(false)
-                        Box(
-                            modifier = Modifier
-                                .size(30.dp)
-                                .padding(3.dp * (1 - highlighted))
-                                .background(
-                                    colorResource(colorMapping[check.reply]!!),
-                                    RoundedCornerShape(3.dp)
-                                )
-                                .clickable {
-                                    scope.launch {
-                                        tooltipState.show()
-                                    }
-                                }
-                        )
-                    }
-                }
-                Column(modifier = Modifier.rotateVertically(false)) {
-                    Text(
-                        text = "$day",
-                    )
-                }
-            }
-        }
-    }
 }
 
 @Composable
@@ -306,15 +231,23 @@ fun ChartTypeSwitcher(
 fun StatisticsPage(
     viewModel: StatisticsViewModel = viewModel(),
 ) {
-    val weekDropdownOption = DropdownOption(text = "Week", onSelect = {})
-    val monthDropdownOption = DropdownOption(text = "Month", onSelect = {})
-    val allTimeDropdownOption = DropdownOption(text = "All time", onSelect = {})
+    val selectedPeriod = remember { mutableStateOf(PeriodType.WEEK) }
+    val weekDropdownOption = DropdownOption(text = "Week", onSelect = {
+        selectedPeriod.value = PeriodType.WEEK
+    })
+    val monthDropdownOption = DropdownOption(text = "Month", onSelect = {
+        selectedPeriod.value = PeriodType.MONTH
+    })
+    val allTimeDropdownOption = DropdownOption(text = "All time", onSelect = {
+        selectedPeriod.value = PeriodType.ALL_TIME
+    })
+    // TODO: If there is any posture check today, set includeToday to true.
     val pastChecks = viewModel.getPastPostureChecks(
-        LocalContext.current, lastWeek(false)).collectAsState(HashSet())
+        LocalContext.current, selectedPeriod.value, includeToday = false).collectAsState(HashSet())
     val answersDistribution = buildAnswersDistribution(
         pastChecks.value
     )
-    val lastWeekChartEntries = buildLastWeekChartEntries(pastChecks.value, false)
+    val chartEntries = buildChartEntriesForPeriod(selectedPeriod.value, pastChecks.value, false)
     Log.d("tomek", "Last week days: ${lastWeek(false)}")
     ScrollableFullScreenColumn(
         headerHeight = 86.dp,
@@ -328,8 +261,8 @@ fun StatisticsPage(
                 onGridChartSelected = {}
             )
         }
-        if (lastWeekChartEntries != null) {
-            LineChartDisplay(lastWeekChartEntries)
+        if (chartEntries != null) {
+            LineChartDisplay(chartEntries)
         }
         // PageHeader("Statistics")
         // ActivityGraph(pastChecks.value)

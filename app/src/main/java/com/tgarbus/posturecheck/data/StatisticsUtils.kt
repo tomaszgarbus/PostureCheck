@@ -45,18 +45,21 @@ enum class PeriodType {
     ALL_TIME,
 }
 
-fun buildLineChartEntry(day: Day, answersDistribution: AnswersDistribution): LineChartEntry {
+fun buildLineChartEntry(label: String, showLabelOnAxis: Boolean, answersDistribution: AnswersDistribution): LineChartEntry {
     return LineChartEntry(
         value = answersDistribution.percentGood() / 100f,
-        label = day.getDayOfWeek()
+        label = label,
+        showLabelOnAxis = showLabelOnAxis,
     )
 }
 
-fun buildLastWeekChartEntries(
+fun buildChartEntriesForDays(
+    days: List<Day>,
     pastPostureChecks: Collection<PastPostureCheck>,
-    includeToday: Boolean): ArrayList<LineChartEntry>? {
+    dayToLabel: (Day) -> String,
+    dayToShowLabel: (Day) -> Boolean,
+): ArrayList<LineChartEntry>? {
     val aggregates = HashMap<Day, AnswersDistribution>()
-    val days = lastWeek(includeToday)
     for (check in pastPostureChecks) {
         if (!aggregates.contains(check.planned.getDay())) {
             aggregates[check.planned.getDay()] = AnswersDistribution(0, 0, 0)
@@ -66,12 +69,39 @@ fun buildLastWeekChartEntries(
     val entries = ArrayList<LineChartEntry>()
     for (day in days) {
         if (!aggregates.contains(day)) {
-            Log.d("tomek", "Failed to build aggregate for ${day}")
             return null
         }
-        entries.add(buildLineChartEntry(day, aggregates[day]!!))
+        entries.add(buildLineChartEntry(dayToLabel(day), dayToShowLabel(day), aggregates[day]!!))
     }
     return entries
+}
+
+fun buildLastWeekChartEntries(
+    pastPostureChecks: Collection<PastPostureCheck>,
+    includeToday: Boolean): ArrayList<LineChartEntry>? {
+    val days = lastWeek(includeToday)
+    return buildChartEntriesForDays(
+        days, pastPostureChecks, { it.getDayOfWeek() }, { true })
+}
+
+fun buildLastMonthChartEntries(
+    pastPostureChecks: Collection<PastPostureCheck>,
+    includeToday: Boolean
+): ArrayList<LineChartEntry>? {
+    val days = lastMonth(includeToday)
+    return buildChartEntriesForDays(days, pastPostureChecks, { it.toShortString() }, { it.getDayOfWeek() == "Mon" })
+}
+
+fun buildChartEntriesForPeriod(
+    period: PeriodType,
+    checks: Collection<PastPostureCheck>,
+    includeToday: Boolean
+): ArrayList<LineChartEntry>? {
+    return when (period) {
+        PeriodType.WEEK -> buildLastWeekChartEntries(checks, includeToday)
+        PeriodType.MONTH -> buildLastMonthChartEntries(checks, includeToday)
+        PeriodType.ALL_TIME -> null
+    }
 }
 
 private fun lastDays(includeToday: Boolean, nDays: Int): List<Day> {
@@ -89,6 +119,10 @@ private fun lastDays(includeToday: Boolean, nDays: Int): List<Day> {
 
 fun lastWeek(includeToday: Boolean): List<Day> {
     return lastDays(includeToday, 7)
+}
+
+fun lastMonth(includeToday: Boolean): List<Day> {
+    return lastDays(includeToday, 28)
 }
 
 fun buildAnswersDistribution(pastPostureChecks: Collection<PastPostureCheck>): AnswersDistribution? {
