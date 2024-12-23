@@ -13,6 +13,12 @@ class TextStyles {
             fontFamily = mulishFontFamily,
             fontWeight = FontWeight.Bold,
         )
+        val h2 = TextStyle(
+            fontSize = 20.sp,
+            lineHeight = 24.sp,
+            fontFamily = mulishFontFamily,
+            fontWeight = FontWeight.Bold,
+        )
         val h3 = TextStyle(
             fontSize = 16.sp,
             lineHeight = 19.2.sp,

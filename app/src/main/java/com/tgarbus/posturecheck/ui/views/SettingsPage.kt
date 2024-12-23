@@ -1,31 +1,33 @@
 package com.tgarbus.posturecheck.ui.views
 
-import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.Slider
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.tgarbus.posturecheck.R
 import com.tgarbus.posturecheck.data.SettingsViewModel
 import com.tgarbus.posturecheck.data.TimeOfDay
 import com.tgarbus.posturecheck.data.kDefaultEarliestNotificationTime
 import com.tgarbus.posturecheck.data.kDefaultLatestNotificationTime
+import com.tgarbus.posturecheck.ui.TextStyles.Companion.h2
+import com.tgarbus.posturecheck.ui.reusables.NumberPicker
 import com.tgarbus.posturecheck.ui.reusables.PageHeader
 import com.tgarbus.posturecheck.ui.reusables.ScrollableFullScreenColumn
 import com.tgarbus.posturecheck.ui.reusables.TimePickerDialog
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 
 @Composable
 fun TimeOfDaySettingsEntry(
@@ -33,8 +35,8 @@ fun TimeOfDaySettingsEntry(
     onClick: () -> Unit
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().clickable { onClick() }) {
-        Text(timeOfDay.toString())
+        modifier = Modifier.clickable { onClick() }) {
+        Text(timeOfDay.toString(), style = h2)
     }
 }
 
@@ -44,13 +46,7 @@ fun SettingsPage(
     triggerRecompute: () -> Unit
 ) {
     val context = LocalContext.current
-    var notificationsPerDay: Int
-    runBlocking {
-        notificationsPerDay =
-            viewModel.getNotificationsPerDay(context).first()
-    }
-    val notificationsPerDayLocal = remember { mutableIntStateOf(notificationsPerDay) }
-    val notificationsPerDayBounds = Pair(1, 10)
+    val notificationsPerDay = viewModel.getNotificationsPerDay(context).collectAsState(3)
 
     val earliestNotificationTime = viewModel.getEarliestNotificationTime(context).collectAsState(
         TimeOfDay.fromPreferencesStorageFormat(kDefaultEarliestNotificationTime))
@@ -65,23 +61,13 @@ fun SettingsPage(
     ) {
         PageHeader("Settings", "Your notifications preferences")
 
-        SettingsItem("Number of notifications per day") {
-            Slider(
-                value = notificationsPerDayLocal.intValue.toFloat(),
-                onValueChange = {
-                    notificationsPerDayLocal.intValue = it.toInt()
-                },
-                onValueChangeFinished = {
-                    Log.i("tomek", notificationsPerDayLocal.intValue.toString())
-                    viewModel.setNotificationsPerDay(context, notificationsPerDayLocal.intValue)
-                    triggerRecompute()
-                },
-                steps = notificationsPerDayBounds.second - notificationsPerDayBounds.first + 1,
-                valueRange = notificationsPerDayBounds.first.toFloat()..notificationsPerDayBounds.second.toFloat(),
-            )
+        SettingsItem("Number of notifications per day", inline = false) {
+            NumberPicker(1, 10, notificationsPerDay.value) {
+                viewModel.setNotificationsPerDay(context, it)
+            }
         }
 
-        SettingsItem("Earliest notification time") {
+        SettingsItem("Earliest acceptable time to send notifications") {
             TimeOfDaySettingsEntry(earliestNotificationTime.value) {
                 showEarliestTimePicker.value = true
             }
@@ -97,6 +83,9 @@ fun SettingsPage(
                 )
             }
         }
+
+        Spacer(modifier = Modifier.fillMaxWidth().height(0.5.dp)
+            .background(colorResource(R.color.spacer_grey)))
 
         SettingsItem("Latest notification time") {
             TimeOfDaySettingsEntry(latestNotificationTime.value) {

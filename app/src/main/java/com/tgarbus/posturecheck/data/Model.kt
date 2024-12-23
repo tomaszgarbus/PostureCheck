@@ -151,6 +151,10 @@ data class TimeOfDay(
     return 100 * hour + minute
   }
 
+  override fun toString(): String {
+    return "%02d:%02d".format(hour, minute)
+  }
+
   companion object {
     fun fromMillis(millis: Long): TimeOfDay {
       val calendar = Calendar.getInstance()

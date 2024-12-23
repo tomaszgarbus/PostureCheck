@@ -4,20 +4,14 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
 import com.tgarbus.posturecheck.ui.views.AdminPage
 import com.tgarbus.posturecheck.ui.views.NavigationFloat
 import com.tgarbus.posturecheck.ui.views.NavigationPage
 import com.tgarbus.posturecheck.ui.views.SettingsPage
 import com.tgarbus.posturecheck.ui.views.StatisticsPage
 
-@OptIn(ExperimentalFoundationApi::class)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
