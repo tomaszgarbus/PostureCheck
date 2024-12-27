@@ -1,12 +1,16 @@
 package com.tgarbus.posturecheck.ui.reusables
 
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.colorResource
+import com.tgarbus.posturecheck.R
 import com.tgarbus.posturecheck.data.TimeOfDay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,10 +33,12 @@ fun TimePickerDialog(
                 Text("Dismiss")
             }
         },
+        textContentColor = colorResource(R.color.dark_green),
         confirmButton = {
-            TextButton(onClick = {
-                onConfirm(TimeOfDay(timePickerState.hour, timePickerState.minute));
-                onDismiss()
+            TextButton(
+                onClick = {
+                    onConfirm(TimeOfDay(timePickerState.hour, timePickerState.minute));
+                    onDismiss()
             }) {
                 Text("OK")
             }
@@ -40,6 +46,10 @@ fun TimePickerDialog(
         text = {
             TimePicker(
                 state = timePickerState,
+                colors = TimePickerDefaults.colors(
+                    timeSelectorSelectedContainerColor = colorResource(R.color.light_mint),
+                    selectorColor = colorResource(R.color.dark_green)
+                )
             )
         }
     )

@@ -1,5 +1,6 @@
 package com.tgarbus.posturecheck.ui.views
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -7,13 +8,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
@@ -27,7 +30,9 @@ import com.tgarbus.posturecheck.ui.TextStyles.Companion.h2
 import com.tgarbus.posturecheck.ui.reusables.NumberPicker
 import com.tgarbus.posturecheck.ui.reusables.PageHeader
 import com.tgarbus.posturecheck.ui.reusables.ScrollableFullScreenColumn
+import com.tgarbus.posturecheck.ui.reusables.SettingsItem
 import com.tgarbus.posturecheck.ui.reusables.TimePickerDialog
+import com.tgarbus.posturecheck.ui.reusables.TimePickerSettingsItemWithDialog
 
 @Composable
 fun TimeOfDaySettingsEntry(
@@ -36,7 +41,7 @@ fun TimeOfDaySettingsEntry(
 ) {
     Row(
         modifier = Modifier.clickable { onClick() }) {
-        Text(timeOfDay.toString(), style = h2)
+        Text(timeOfDay.toString(), style = h2.copy(colorResource(R.color.dark_green)))
     }
 }
 
@@ -67,41 +72,39 @@ fun SettingsPage(
             }
         }
 
-        SettingsItem("Earliest acceptable time to send notifications") {
-            TimeOfDaySettingsEntry(earliestNotificationTime.value) {
-                showEarliestTimePicker.value = true
-            }
-            if (showEarliestTimePicker.value) {
-                TimePickerDialog(
-                    earliestNotificationTime.value,
-                    onDismiss = {
-                        showEarliestTimePicker.value = false
-                    }, onConfirm = {
-                        timeOfDay -> viewModel.setEarliestNotificationTime(context, timeOfDay)
-                        triggerRecompute()
-                    }
-                )
+        SettingsItem("Temporarily disable notifications", inline = true) {
+            Switch(
+                checked = true, onCheckedChange = {},
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = colorResource(R.color.mint),
+                ))
+        }
+
+        TimePickerSettingsItemWithDialog(
+            "Earliest acceptable time to send notifications",
+            earliestNotificationTime.value) { timeOfDay ->
+            if (timeOfDay >= latestNotificationTime.value) {
+                Toast.makeText(context, "Earliest allowed notification time must be earlier the latest allowed time.", Toast.LENGTH_SHORT).show()
+            } else {
+                viewModel.setEarliestNotificationTime(context, timeOfDay)
+                triggerRecompute()
             }
         }
 
         Spacer(modifier = Modifier.fillMaxWidth().height(0.5.dp)
             .background(colorResource(R.color.spacer_grey)))
 
-        SettingsItem("Latest notification time") {
-            TimeOfDaySettingsEntry(latestNotificationTime.value) {
-                showLatestTimePicker.value = true
-            }
-            if (showLatestTimePicker.value) {
-                TimePickerDialog(
-                    latestNotificationTime.value,
-                    onDismiss = {
-                        showLatestTimePicker.value = false
-                    }, onConfirm = {
-                        timeOfDay -> viewModel.setLatestNotificationTime(context, timeOfDay)
-                        triggerRecompute()
-                    }
-                )
+        TimePickerSettingsItemWithDialog(
+            "Latest notification time",
+            latestNotificationTime.value) { timeOfDay ->
+            if (timeOfDay <= earliestNotificationTime.value) {
+                Toast.makeText(context, "Latest allowed notification time must be later than the earliest allowed time.", Toast.LENGTH_SHORT).show()
+            } else {
+                viewModel.setLatestNotificationTime(context, timeOfDay)
+                triggerRecompute()
             }
         }
+
     }
 }

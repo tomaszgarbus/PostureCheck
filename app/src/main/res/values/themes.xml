@@ -5,5 +5,7 @@
     <item name="android:statusBarColor">@color/light_mint</item>
     <item name="android:windowLightStatusBar">true</item>
     <item name="android:colorPrimary">@color/dark_green</item>
+    <item name="android:textColorPrimary">@color/dark_green</item>
+    <item name="android:colorPrimaryDark">@color/dark_green</item>
   </style>
 </resources>

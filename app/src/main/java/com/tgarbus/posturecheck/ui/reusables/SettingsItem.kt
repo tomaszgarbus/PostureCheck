@@ -1,4 +1,4 @@
-package com.tgarbus.posturecheck.ui.views
+package com.tgarbus.posturecheck.ui.reusables
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
