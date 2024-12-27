@@ -9,9 +9,6 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-const val kDefaultNotificationsPerDay = 3
-const val kDefaultEarliestNotificationTime = 800
-const val kDefaultLatestNotificationTime = 2100
 
 val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore("Settings")
 class SettingsRepository(private val context: Context) {
@@ -21,7 +18,7 @@ class SettingsRepository(private val context: Context) {
 
     fun getNotificationsPerDayAsFlow(): Flow<Int> {
         return context.settingsDataStore.data.map {
-            preferences -> preferences[notificationsPerDayKey] ?: kDefaultNotificationsPerDay
+            preferences -> preferences[notificationsPerDayKey] ?: DefaultSettings.defaulNotificationsPerDay
         }
     }
 
@@ -35,7 +32,7 @@ class SettingsRepository(private val context: Context) {
     fun getEarliestNotificationTimeAsFlow(): Flow<TimeOfDay> {
         return context.settingsDataStore.data.map {
             preferences -> TimeOfDay.fromPreferencesStorageFormat(
-            preferences[earliestNotificationTimeKey] ?: kDefaultEarliestNotificationTime)
+            preferences[earliestNotificationTimeKey] ?: DefaultSettings.defaultEarliestNotificationTime.toPreferencesStorageFormat())
         }
     }
 
@@ -48,7 +45,7 @@ class SettingsRepository(private val context: Context) {
     fun getLatestNotificationTimeAsFlow(): Flow<TimeOfDay> {
         return context.settingsDataStore.data.map {
                 preferences -> TimeOfDay.fromPreferencesStorageFormat(
-            preferences[latestNotificationTimeKey] ?: kDefaultLatestNotificationTime)
+            preferences[latestNotificationTimeKey] ?: DefaultSettings.defaultLatestNotificationTime.toPreferencesStorageFormat())
         }
     }
 

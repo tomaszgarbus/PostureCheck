@@ -7,6 +7,12 @@ import com.tgarbus.posturecheck.ui.Fonts.Companion.mulishFontFamily
 
 class TextStyles {
     companion object {
+        val aboutPageNumber = TextStyle(
+            fontSize = 48.sp,
+            lineHeight = 57.6.sp,
+            fontFamily = mulishFontFamily,
+            fontWeight = FontWeight.Bold,
+        )
         val h1 = TextStyle(
             fontSize = 24.sp,
             lineHeight = 28.8.sp,

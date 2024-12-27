@@ -2,15 +2,12 @@ package com.tgarbus.posturecheck.ui.views
 
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
@@ -22,28 +19,14 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tgarbus.posturecheck.R
+import com.tgarbus.posturecheck.data.DefaultSettings
 import com.tgarbus.posturecheck.data.SettingsViewModel
 import com.tgarbus.posturecheck.data.TimeOfDay
-import com.tgarbus.posturecheck.data.kDefaultEarliestNotificationTime
-import com.tgarbus.posturecheck.data.kDefaultLatestNotificationTime
-import com.tgarbus.posturecheck.ui.TextStyles.Companion.h2
 import com.tgarbus.posturecheck.ui.reusables.NumberPicker
 import com.tgarbus.posturecheck.ui.reusables.PageHeader
 import com.tgarbus.posturecheck.ui.reusables.ScrollableFullScreenColumn
 import com.tgarbus.posturecheck.ui.reusables.SettingsItem
-import com.tgarbus.posturecheck.ui.reusables.TimePickerDialog
 import com.tgarbus.posturecheck.ui.reusables.TimePickerSettingsItemWithDialog
-
-@Composable
-fun TimeOfDaySettingsEntry(
-    timeOfDay: TimeOfDay,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier.clickable { onClick() }) {
-        Text(timeOfDay.toString(), style = h2.copy(colorResource(R.color.dark_green)))
-    }
-}
 
 @Composable
 fun SettingsPage(
@@ -54,9 +37,9 @@ fun SettingsPage(
     val notificationsPerDay = viewModel.getNotificationsPerDay(context).collectAsState(3)
 
     val earliestNotificationTime = viewModel.getEarliestNotificationTime(context).collectAsState(
-        TimeOfDay.fromPreferencesStorageFormat(kDefaultEarliestNotificationTime))
+        DefaultSettings.defaultEarliestNotificationTime)
     val latestNotificationTime = viewModel.getLatestNotificationTime(context).collectAsState(
-        TimeOfDay.fromPreferencesStorageFormat(kDefaultLatestNotificationTime))
+        DefaultSettings.defaultLatestNotificationTime)
 
     val showEarliestTimePicker = remember { mutableStateOf(false) }
     val showLatestTimePicker = remember { mutableStateOf(false) }

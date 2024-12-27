@@ -16,4 +16,12 @@ class StatisticsViewModel(): ViewModel() {
             PeriodType.ALL_TIME -> PastChecksRepository(context).getPastChecksHistoryAsFlow()
         }
     }
+
+    fun getMinTimeOfDay(context: Context): Flow<TimeOfDay> {
+        return SettingsRepository(context).getEarliestNotificationTimeAsFlow()
+    }
+
+    fun getMaxTimeOfDay(context: Context): Flow<TimeOfDay> {
+        return SettingsRepository(context).getLatestNotificationTimeAsFlow()
+    }
 }

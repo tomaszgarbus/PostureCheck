@@ -8,13 +8,11 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.tgarbus.posturecheck.data.Day
+import com.tgarbus.posturecheck.data.DefaultSettings
 import com.tgarbus.posturecheck.data.PlannedChecksRepository
 import com.tgarbus.posturecheck.data.PlannedPostureCheck
 import com.tgarbus.posturecheck.data.SettingsRepository
 import com.tgarbus.posturecheck.data.TimeOfDay
-import com.tgarbus.posturecheck.data.kDefaultEarliestNotificationTime
-import com.tgarbus.posturecheck.data.kDefaultLatestNotificationTime
-import com.tgarbus.posturecheck.data.kDefaultNotificationsPerDay
 import com.tgarbus.posturecheck.data.recomputeNotificationsForDay
 import com.tgarbus.posturecheck.data.validateNotificationsForDay
 import kotlinx.coroutines.flow.first
@@ -30,9 +28,9 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
     private fun recomputeNextNotifications(
         nextNotifications: Set<PlannedPostureCheck>,
         daysAhead: Int = 5,
-        notificationsPerDay: Int = kDefaultNotificationsPerDay,
-        minTime: TimeOfDay = TimeOfDay.fromPreferencesStorageFormat(kDefaultEarliestNotificationTime),
-        maxTime: TimeOfDay = TimeOfDay.fromPreferencesStorageFormat(kDefaultLatestNotificationTime)
+        notificationsPerDay: Int = DefaultSettings.defaulNotificationsPerDay,
+        minTime: TimeOfDay = DefaultSettings.defaultEarliestNotificationTime,
+        maxTime: TimeOfDay = DefaultSettings.defaultLatestNotificationTime
         // TODO: max time
     ): Set<PlannedPostureCheck> {
         val calendar: Calendar = Calendar.getInstance()
@@ -117,11 +115,9 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
         val plannedChecksRepo = PlannedChecksRepository(context)
         val settingsRepo = SettingsRepository(context)
         var oldPlannedChecks: Set<PlannedPostureCheck>? = null
-        var notificationsPerDay = kDefaultNotificationsPerDay
-        var earliestNotificationTime = TimeOfDay.fromPreferencesStorageFormat(
-            kDefaultEarliestNotificationTime)
-        var latestNotificationTime = TimeOfDay.fromPreferencesStorageFormat(
-            kDefaultLatestNotificationTime)
+        var notificationsPerDay = DefaultSettings.defaulNotificationsPerDay
+        var earliestNotificationTime = DefaultSettings.defaultEarliestNotificationTime
+        var latestNotificationTime = DefaultSettings.defaultLatestNotificationTime
         runBlocking {
             oldPlannedChecks = plannedChecksRepo.getPlannedChecks()
             notificationsPerDay = settingsRepo.getNotificationsPerDayAsFlow().first()

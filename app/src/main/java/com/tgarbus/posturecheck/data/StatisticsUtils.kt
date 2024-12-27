@@ -1,7 +1,8 @@
 package com.tgarbus.posturecheck.data
 
-import android.util.Log
 import com.tgarbus.posturecheck.ui.reusables.LineChartEntry
+import com.tgarbus.posturecheck.ui.reusables.WeekGridChartColumn
+import com.tgarbus.posturecheck.ui.reusables.WeekGridChartEntry
 
 data class AnswersDistribution(
     var goodPostureCount: Int,
@@ -53,7 +54,7 @@ fun buildLineChartEntry(label: String, showLabelOnAxis: Boolean, answersDistribu
     )
 }
 
-fun buildChartEntriesForDays(
+fun buildLineChartEntriesForDays(
     days: List<Day>,
     pastPostureChecks: Collection<PastPostureCheck>,
     dayToLabel: (Day) -> String,
@@ -76,32 +77,47 @@ fun buildChartEntriesForDays(
     return entries
 }
 
-fun buildLastWeekChartEntries(
+fun buildLastWeekLineChartEntries(
     pastPostureChecks: Collection<PastPostureCheck>,
     includeToday: Boolean): ArrayList<LineChartEntry>? {
     val days = lastWeek(includeToday)
-    return buildChartEntriesForDays(
+    return buildLineChartEntriesForDays(
         days, pastPostureChecks, { it.getDayOfWeek() }, { true })
 }
 
-fun buildLastMonthChartEntries(
+fun buildLastMonthLineChartEntries(
     pastPostureChecks: Collection<PastPostureCheck>,
     includeToday: Boolean
 ): ArrayList<LineChartEntry>? {
     val days = lastMonth(includeToday)
-    return buildChartEntriesForDays(days, pastPostureChecks, { it.toShortString() }, { it.getDayOfWeek() == "Mon" })
+    return buildLineChartEntriesForDays(days, pastPostureChecks, { it.toShortString() }, { it.getDayOfWeek() == "Mon" })
 }
 
-fun buildChartEntriesForPeriod(
+fun buildLineChartEntriesForPeriod(
     period: PeriodType,
     checks: Collection<PastPostureCheck>,
     includeToday: Boolean
 ): ArrayList<LineChartEntry>? {
     return when (period) {
-        PeriodType.WEEK -> buildLastWeekChartEntries(checks, includeToday)
-        PeriodType.MONTH -> buildLastMonthChartEntries(checks, includeToday)
+        PeriodType.WEEK -> buildLastWeekLineChartEntries(checks, includeToday)
+        PeriodType.MONTH -> buildLastMonthLineChartEntries(checks, includeToday)
         PeriodType.ALL_TIME -> null
     }
+}
+
+fun groupPastChecksByDay(checks: Collection<PastPostureCheck>): HashMap<Day, ArrayList<PastPostureCheck>> {
+    val result = HashMap<Day, ArrayList<PastPostureCheck>>()
+    for (check in checks) {
+        val day = check.planned.getDay()
+        if (!result.contains(day)) {
+            result[day] = arrayListOf()
+        }
+        result[day]!!.add(check)
+    }
+    for (day in result.keys) {
+        result[day]!!.sortBy { it.planned.getDay() }
+    }
+    return result
 }
 
 private fun lastDays(includeToday: Boolean, nDays: Int): List<Day> {
@@ -141,4 +157,26 @@ fun buildAnswersDistribution(pastPostureChecks: Collection<PastPostureCheck>): A
         badPostureCount = counts[PostureCheckReply.BAD]!!,
         noAnswerCount = counts[PostureCheckReply.NO_ANSWER]!! + counts[PostureCheckReply.NOT_APPLICABLE]!!
     )
+}
+
+fun buildWeekGridChartColumns(
+    checks: Collection<PastPostureCheck>, includeToday: Boolean): ArrayList<WeekGridChartColumn>? {
+    val days = lastWeek(includeToday)
+    val groupedByDay = groupPastChecksByDay(checks)
+    for (day in days) {
+        if (!groupedByDay.contains(day)) {
+            return null
+        }
+    }
+    val result: ArrayList<WeekGridChartColumn> = arrayListOf()
+    for (day in days) {
+        val column = WeekGridChartColumn(
+            label = day.getDayOfWeek(),
+            entries = ArrayList(groupedByDay[day]!!.map {
+                WeekGridChartEntry(time = it.planned.getTimeOfDay(), reply = it.reply)
+            })
+        )
+        result.add(column)
+    }
+    return result
 }

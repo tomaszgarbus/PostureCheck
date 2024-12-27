@@ -21,6 +21,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.tgarbus.posturecheck.R
+import com.tgarbus.posturecheck.data.BuildConfig
 
 @Composable
 fun NavigationButton(
@@ -80,6 +81,13 @@ fun NavigationFloat(
                     currentPage == NavigationPage.SETTINGS, {
                     onPageChanged(NavigationPage.SETTINGS)
                 })
+                if (BuildConfig.isAdmin) {
+                    NavigationButton(
+                        R.drawable.about, "Admin",
+                        currentPage == NavigationPage.ADMIN, {
+                            onPageChanged(NavigationPage.ADMIN)
+                        })
+                }
             }
         }
     }

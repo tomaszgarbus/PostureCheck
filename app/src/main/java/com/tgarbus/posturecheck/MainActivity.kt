@@ -1,12 +1,13 @@
 package com.tgarbus.posturecheck
 
 import android.content.Intent
-import android.content.res.Resources.Theme
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.core.content.ContextCompat
+import com.tgarbus.posturecheck.ui.views.AboutPage
 import com.tgarbus.posturecheck.ui.views.AdminPage
 import com.tgarbus.posturecheck.ui.views.NavigationFloat
 import com.tgarbus.posturecheck.ui.views.NavigationPage
@@ -22,7 +23,7 @@ class MainActivity : ComponentActivity() {
             when (currentPage.value) {
                 NavigationPage.ADMIN -> AdminPage()
                 NavigationPage.STATISTICS -> StatisticsPage()
-                NavigationPage.ABOUT -> AdminPage()
+                NavigationPage.ABOUT -> AboutPage()
                 NavigationPage.SETTINGS -> SettingsPage(triggerRecompute = {
                     val intent = Intent(
                         baseContext, RecomputeNextNotificationsBroadcastReceiver::class.java)
@@ -35,6 +36,7 @@ class MainActivity : ComponentActivity() {
                     currentPage.value = it
                 })
         }
+
         val intent = Intent(baseContext, RecomputeNextNotificationsBroadcastReceiver::class.java)
         sendBroadcast(intent)
     }

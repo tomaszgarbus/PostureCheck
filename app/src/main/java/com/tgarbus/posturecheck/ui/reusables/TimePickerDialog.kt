@@ -9,7 +9,9 @@ import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.TextStyle
 import com.tgarbus.posturecheck.R
 import com.tgarbus.posturecheck.data.TimeOfDay
 
@@ -30,9 +32,10 @@ fun TimePickerDialog(
         onDismissRequest = onDismiss,
         dismissButton = {
             TextButton(onClick = { onDismiss() }) {
-                Text("Dismiss")
+                Text("Dismiss", color = colorResource(R.color.dark_green))
             }
         },
+        containerColor = colorResource(R.color.light_mint),
         textContentColor = colorResource(R.color.dark_green),
         confirmButton = {
             TextButton(
@@ -40,15 +43,19 @@ fun TimePickerDialog(
                     onConfirm(TimeOfDay(timePickerState.hour, timePickerState.minute));
                     onDismiss()
             }) {
-                Text("OK")
+                Text("OK", color = colorResource(R.color.dark_green))
             }
         },
         text = {
             TimePicker(
                 state = timePickerState,
                 colors = TimePickerDefaults.colors(
-                    timeSelectorSelectedContainerColor = colorResource(R.color.light_mint),
-                    selectorColor = colorResource(R.color.dark_green)
+                    timeSelectorSelectedContentColor = Color.White,
+                    timeSelectorSelectedContainerColor = colorResource(R.color.dark_green),
+                    timeSelectorUnselectedContainerColor = colorResource(R.color.light_mint),
+                    timeSelectorUnselectedContentColor = Color.Black,
+                    selectorColor = colorResource(R.color.dark_green),
+                    clockDialColor = Color.White,
                 )
             )
         }

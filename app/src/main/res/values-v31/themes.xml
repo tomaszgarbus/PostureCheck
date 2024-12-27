@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.PostureCheck" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/light_mint</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:colorPrimary">@color/dark_green</item>
+        <item name="android:textColorPrimary">@color/dark_green</item>
+        <item name="android:colorPrimaryDark">@color/dark_green</item>
+
+        <!-- Splash screen -->
+        <item name="android:windowSplashScreenBackground">@color/mint</item>
+    </style>
+</resources>

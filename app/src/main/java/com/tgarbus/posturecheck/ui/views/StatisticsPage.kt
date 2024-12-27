@@ -1,10 +1,8 @@
 package com.tgarbus.posturecheck.ui.views
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,17 +15,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.RichTooltipBox
-import androidx.compose.material3.RichTooltipState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,16 +36,14 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tgarbus.posturecheck.R
 import com.tgarbus.posturecheck.data.AnswersDistribution
-import com.tgarbus.posturecheck.data.Day
+import com.tgarbus.posturecheck.data.DefaultSettings
 import com.tgarbus.posturecheck.data.PastPostureCheck
 import com.tgarbus.posturecheck.data.PeriodType
-import com.tgarbus.posturecheck.data.PostureCheckReply
 import com.tgarbus.posturecheck.data.StatisticsViewModel
+import com.tgarbus.posturecheck.data.TimeOfDay
 import com.tgarbus.posturecheck.data.buildAnswersDistribution
-import com.tgarbus.posturecheck.data.buildChartEntriesForDays
-import com.tgarbus.posturecheck.data.buildChartEntriesForPeriod
-import com.tgarbus.posturecheck.data.buildLastWeekChartEntries
-import com.tgarbus.posturecheck.data.lastWeek
+import com.tgarbus.posturecheck.data.buildLineChartEntriesForPeriod
+import com.tgarbus.posturecheck.data.buildWeekGridChartColumns
 import com.tgarbus.posturecheck.data.percentBad
 import com.tgarbus.posturecheck.data.percentGood
 import com.tgarbus.posturecheck.data.percentNoAnswer
@@ -64,9 +55,8 @@ import com.tgarbus.posturecheck.ui.reusables.DropdownOption
 import com.tgarbus.posturecheck.ui.reusables.LineChart
 import com.tgarbus.posturecheck.ui.reusables.LineChartEntry
 import com.tgarbus.posturecheck.ui.reusables.ScrollableFullScreenColumn
-import kotlinx.coroutines.launch
-import java.time.Period
-import kotlin.math.max
+import com.tgarbus.posturecheck.ui.reusables.WeekGridChart
+import com.tgarbus.posturecheck.ui.reusables.WeekGridChartColumn
 
 // https://stackoverflow.com/questions/70057396/how-to-show-vertical-text-with-proper-size-layout-in-jetpack-compose
 fun Modifier.rotateVertically(clockwise: Boolean = true): Modifier {
@@ -181,6 +171,22 @@ fun LineChartDisplay(entries: ArrayList<LineChartEntry>) {
 }
 
 @Composable
+fun WeekGridChartDisplay(
+    columns: ArrayList<WeekGridChartColumn>, minTimeOfDay: TimeOfDay, maxTimeOfDay: TimeOfDay) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(1.5f)
+            .clip(RoundedCornerShape(24.dp))
+            .background(Color.White)
+            .padding(20.dp),
+        horizontalArrangement = Arrangement.spacedBy(20.dp),
+    ) {
+        WeekGridChart(columns, minTimeOfDay, maxTimeOfDay, canvasModifier = Modifier.fillMaxSize())
+    }
+}
+
+@Composable
 fun ChartTypeSwitcherOption(
     painter: Painter,
     text: String,
@@ -207,10 +213,10 @@ enum class ChartType {
 
 @Composable
 fun ChartTypeSwitcher(
+    activeChartType: ChartType,
     onLineChartSelected: () -> Unit,
     onGridChartSelected: () -> Unit,
 ) {
-    val activeChartType = remember { mutableStateOf(ChartType.LINE) }
     Row(modifier = Modifier
         .clip(RoundedCornerShape(38.dp))
         .background(Color.White)
@@ -218,12 +224,34 @@ fun ChartTypeSwitcher(
         horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         ChartTypeSwitcherOption(
             painterResource(R.drawable.line_chart), "Line chart",
-            activeChartType.value == ChartType.LINE,
-            { activeChartType.value = ChartType.LINE })
+            activeChartType == ChartType.LINE,
+            onLineChartSelected)
         ChartTypeSwitcherOption(
             painterResource(R.drawable.grid_chart), "Grid chart",
-            activeChartType.value == ChartType.GRID,
-            { activeChartType.value = ChartType.GRID })
+            activeChartType == ChartType.GRID,
+            onGridChartSelected)
+    }
+}
+
+@Composable
+fun ChartBlock(
+    activeChartType: ChartType,
+    pastChecks: Set<PastPostureCheck>,
+    selectedPeriod: PeriodType,
+    minTimeOfDay: TimeOfDay,
+    maxTimeOfDay: TimeOfDay
+) {
+    if (activeChartType == ChartType.LINE) {
+        val chartEntries = buildLineChartEntriesForPeriod(selectedPeriod, pastChecks, false)
+        if (chartEntries != null) {
+            LineChartDisplay(chartEntries)
+        }
+    }
+    if (activeChartType == ChartType.GRID) {
+        val chartColumns = buildWeekGridChartColumns(pastChecks, false)
+        if (chartColumns != null) {
+            WeekGridChartDisplay(chartColumns, minTimeOfDay, maxTimeOfDay)
+        }
     }
 }
 
@@ -247,8 +275,11 @@ fun StatisticsPage(
     val answersDistribution = buildAnswersDistribution(
         pastChecks.value
     )
-    val chartEntries = buildChartEntriesForPeriod(selectedPeriod.value, pastChecks.value, false)
-    Log.d("tomek", "Last week days: ${lastWeek(false)}")
+    val activeChartType = remember { mutableStateOf(ChartType.LINE) }
+    val minTimeOfDay = viewModel.getMinTimeOfDay(LocalContext.current).collectAsState(
+        DefaultSettings.defaultEarliestNotificationTime)
+    val maxTimeOfDay = viewModel.getMaxTimeOfDay(LocalContext.current).collectAsState(
+        DefaultSettings.defaultLatestNotificationTime)
     ScrollableFullScreenColumn(
         headerHeight = 86.dp,
         verticalArrangement = Arrangement.spacedBy(20.dp)) {
@@ -257,15 +288,18 @@ fun StatisticsPage(
         }
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
             ChartTypeSwitcher(
-                onLineChartSelected = {},
-                onGridChartSelected = {}
+                activeChartType = activeChartType.value,
+                onLineChartSelected = {
+                    activeChartType.value = ChartType.LINE
+                },
+                onGridChartSelected = {
+                    activeChartType.value = ChartType.GRID
+                }
             )
         }
-        if (chartEntries != null) {
-            LineChartDisplay(chartEntries)
-        }
-        // PageHeader("Statistics")
-        // ActivityGraph(pastChecks.value)
+        ChartBlock(
+            activeChartType.value, pastChecks.value, selectedPeriod.value, minTimeOfDay.value,
+            maxTimeOfDay.value)
     }
     Box(modifier = Modifier.fillMaxSize().padding(20.dp, 32.dp)) {
         DropdownMenu(

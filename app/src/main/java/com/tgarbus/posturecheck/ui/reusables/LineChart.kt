@@ -99,7 +99,7 @@ fun LineChart(
             inset(
                 left = 0f,
                 top = 0f,
-                right = size.width - yAxisLabelsWidth - rightPadding,
+                right = size.width - yAxisLabelsWidth,
                 bottom = xAxisLabelsHeight
             ) {
                 drawText(
