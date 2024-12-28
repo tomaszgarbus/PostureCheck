@@ -40,9 +40,6 @@ fun SettingsPage(
     val latestNotificationTime = viewModel.getLatestNotificationTime(context).collectAsState(
         DefaultSettings.defaultLatestNotificationTime)
 
-    val showEarliestTimePicker = remember { mutableStateOf(false) }
-    val showLatestTimePicker = remember { mutableStateOf(false) }
-
     ScrollableFullScreenColumn (
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {

@@ -76,11 +76,23 @@ class PastChecksRepository(private val context: Context) {
     preferences[daysWithEntriesKey] = daysWithEvents
   }
 
+  private fun addPastCheckToPreferences(preferences: MutablePreferences, pastPostureCheck: PastPostureCheck) {
+    preferences[millisKey(pastPostureCheck.planned.id)] = pastPostureCheck.planned.millis
+    preferences[replyKey(pastPostureCheck.planned.id)] = pastPostureCheck.reply.name
+    addIdToList(pastPostureCheck.planned.id, pastPostureCheck.planned.getDay(), preferences)
+  }
+
+  suspend fun addPastChecks(pastPostureChecks: Collection<PastPostureCheck>) {
+    context.pastChecksDataStore.edit { preferences ->
+      for (pastPostureCheck in pastPostureChecks) {
+        addPastCheckToPreferences(preferences, pastPostureCheck)
+      }
+    }
+  }
+
   suspend fun addPastCheck(pastPostureCheck: PastPostureCheck) {
     context.pastChecksDataStore.edit { preferences ->
-      preferences[millisKey(pastPostureCheck.planned.id)] = pastPostureCheck.planned.millis
-      preferences[replyKey(pastPostureCheck.planned.id)] = pastPostureCheck.reply.name
-      addIdToList(pastPostureCheck.planned.id, pastPostureCheck.planned.getDay(), preferences)
+      addPastCheckToPreferences(preferences, pastPostureCheck)
     }
   }
 }
