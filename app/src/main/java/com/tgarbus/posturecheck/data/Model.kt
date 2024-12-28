@@ -213,9 +213,18 @@ data class Day(
     return fromMillis(calendar.timeInMillis)
   }
 
+  operator fun minus(other: Day): Int {
+    var tmp = this.copy()
+    var diff = 0
+    while (tmp != other) {
+      tmp -= 1
+      diff += 1
+    }
+    return diff
+  }
+
   fun getDayOfWeek(): String {
     val cal = toCalendar()
-    Log.d("tomek", "Debugging day of week: $this: $cal")
     return when (cal.get(Calendar.DAY_OF_WEEK)) {
       Calendar.MONDAY -> "Mon"
       Calendar.TUESDAY -> "Tue"

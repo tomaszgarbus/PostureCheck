@@ -39,7 +39,6 @@ class PastChecksRepository(private val context: Context) {
 
   private fun getChecksForDay(day: Day, preferences: Preferences): Set<PastPostureCheck> {
     val idsForDay = preferences[idsPerDayKey(day)] ?: HashSet()
-    Log.d("tomek", "Debuggging getChecksForDay: $day, $idsForDay")
     return idsForDay.map { id -> getPastPostureCheckById(id, preferences) }.toSet()
   }
 
@@ -58,11 +57,9 @@ class PastChecksRepository(private val context: Context) {
     return context.pastChecksDataStore.data.map { preferences ->
       val allDays = getDaysWithEntries(preferences)
       val allChecks = HashSet<PastPostureCheck>()
-      Log.d("tomek", "Debug preferences: $preferences")
       for (day in allDays) {
         allChecks.addAll(getChecksForDay(day, preferences))
       }
-      Log.d("tomek", "Found checks: $allChecks")
       allChecks
     }
   }

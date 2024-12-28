@@ -60,7 +60,6 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
             val dayStr = sdf.format(calendar.time)
             if (!validateNotificationsForDay(groupedByDay.getOrDefault(dayStr, HashSet()),
                 notificationsPerDay, minTime, maxTime)) {
-                Log.i("tomek", "Recomputing notifications for day ${dayStr}")
                 groupedByDay[dayStr] =
                     recomputeNotificationsForDay(notificationsPerDay, Day.fromMillis(calendar.timeInMillis), minTime, maxTime)
             }

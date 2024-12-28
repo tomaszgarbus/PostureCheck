@@ -1,14 +1,32 @@
 package com.tgarbus.posturecheck.data
 
+import android.util.Log
 import com.tgarbus.posturecheck.ui.reusables.LineChartEntry
 import com.tgarbus.posturecheck.ui.reusables.WeekGridChartColumn
 import com.tgarbus.posturecheck.ui.reusables.WeekGridChartEntry
+import java.util.Collections.min
 
 data class AnswersDistribution(
     var goodPostureCount: Int,
     var badPostureCount: Int,
     var noAnswerCount: Int,
-)
+) {
+    companion object {
+        fun fromChecks(checks: Collection<PastPostureCheck>): AnswersDistribution {
+            var goodPostureCount = 0
+            var badPostureCount = 0
+            var noAnswerCount = 0
+            for (check in checks) {
+                when (check.reply) {
+                    PostureCheckReply.GOOD -> goodPostureCount += 1
+                    PostureCheckReply.BAD -> badPostureCount += 1
+                    else -> noAnswerCount += 1
+                }
+            }
+            return AnswersDistribution(goodPostureCount, badPostureCount, noAnswerCount)
+        }
+    }
+}
 
 private fun AnswersDistribution.sumCounts(): Int {
     return goodPostureCount + badPostureCount + noAnswerCount
@@ -34,11 +52,6 @@ fun AnswersDistribution.increment(reply: PostureCheckReply) {
         PostureCheckReply.NOT_APPLICABLE -> noAnswerCount++
     }
 }
-
-data class StatsForPeriod(
-    val answersDistribution: AnswersDistribution,
-    val chartEntries: List<LineChartEntry>
-)
 
 enum class PeriodType {
     WEEK,
@@ -93,6 +106,51 @@ fun buildLastMonthLineChartEntries(
     return buildLineChartEntriesForDays(days, pastPostureChecks, { it.toShortString() }, { it.getDayOfWeek() == "Mon" })
 }
 
+fun collectChecksFromInterval(
+    groupedByDay: HashMap<Day, ArrayList<PastPostureCheck>>, dayFrom: Day,
+    dayTo: Day): ArrayList<PastPostureCheck> {
+    var day = dayFrom
+    val result = ArrayList<PastPostureCheck>()
+    while (day <= dayTo) {
+        if (groupedByDay.contains(day)) {
+            result.addAll(groupedByDay[day]!!)
+        }
+        day += 1
+    }
+    return result
+}
+
+fun buildLineChartEntriesForAllTime(
+    pastPostureChecks: Collection<PastPostureCheck>,
+    includeToday: Boolean,
+    numEntries: Int = 30,
+    numShownLabels: Int = 8,
+): ArrayList<LineChartEntry>? {
+    val earliestDay = pastPostureChecks.minOf { it.planned.getDay() }
+    var latestDay = Day.today()
+    if (!includeToday) {
+        latestDay -= 1
+    }
+    val totalDays = latestDay - earliestDay + 1
+    val daysPerEntry = totalDays / numEntries + if (totalDays % numEntries > 0) 1 else 0
+
+    val groupedByDay = groupPastChecksByDay(pastPostureChecks)
+    var dayFrom = earliestDay
+    val result = ArrayList<LineChartEntry>()
+    val showLabelEveryNth = numEntries / numShownLabels + if (numEntries % numShownLabels > 0) 1 else 0
+    while (dayFrom <= latestDay) {
+        val dayTo = min(listOf(dayFrom + daysPerEntry - 1, latestDay))
+        val checks = collectChecksFromInterval(groupedByDay, dayFrom, dayTo)
+        if (checks.isEmpty()) {
+            return null
+        }
+        val showLabel = result.size % showLabelEveryNth == 0
+        result.add(buildLineChartEntry(dayFrom.toShortString(), showLabel, AnswersDistribution.fromChecks(checks)))
+        dayFrom += daysPerEntry
+    }
+    return result
+}
+
 fun buildLineChartEntriesForPeriod(
     period: PeriodType,
     checks: Collection<PastPostureCheck>,
@@ -101,7 +159,7 @@ fun buildLineChartEntriesForPeriod(
     return when (period) {
         PeriodType.WEEK -> buildLastWeekLineChartEntries(checks, includeToday)
         PeriodType.MONTH -> buildLastMonthLineChartEntries(checks, includeToday)
-        PeriodType.ALL_TIME -> null
+        PeriodType.ALL_TIME -> buildLineChartEntriesForAllTime(checks, includeToday)
     }
 }
 

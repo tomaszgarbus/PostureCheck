@@ -210,7 +210,7 @@ fun WeekGridChartDisplay(
         ) {
             GridChartLegendEntry(colorResource(R.color.accent_yellow), "Straight posture")
             GridChartLegendEntry(colorResource(R.color.dark_green), "Slouching")
-            GridChartLegendEntry(colorResource(R.color.spacer_grey), "No answer / skipped")
+            GridChartLegendEntry(colorResource(R.color.light_mint), "No answer / skipped")
         }
     }
 }

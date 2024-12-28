@@ -11,7 +11,6 @@ fun validateNotificationsForDay(
     minTime: TimeOfDay,
     maxTime: TimeOfDay
 ): Boolean {
-    Log.i("tomek", "Validation notifications per day: ${notifications}, ${notificationsPerDay}, ${minTime}, ${maxTime}")
 
     // Validate number of notifications.
     if (notifications.size != notificationsPerDay) {

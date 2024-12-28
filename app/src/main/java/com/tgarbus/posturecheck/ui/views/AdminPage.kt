@@ -7,10 +7,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -21,6 +25,36 @@ import com.tgarbus.posturecheck.data.PastChecksRepository
 import com.tgarbus.posturecheck.data.PlannedChecksRepository
 import com.tgarbus.posturecheck.data.generateFakePastChecks
 import com.tgarbus.posturecheck.ui.reusables.PageHeader
+
+@Composable
+fun GenerateFakeDateSection(
+    callback: (checksPerDay: Int, daysBack: Int) -> Unit
+) {
+    val checksPerDay = remember { mutableIntStateOf(3) }
+    val daysBack = remember { mutableIntStateOf(30) }
+
+    Text("Checks per day: ${checksPerDay.intValue}")
+    Slider(
+        value = checksPerDay.intValue.toFloat(),
+        valueRange = 1f..10f,
+        onValueChange = {
+            checksPerDay.intValue = it.toInt()
+        })
+
+    Text("Days back: ${daysBack.intValue}")
+    Slider(
+        value = daysBack.intValue.toFloat(),
+        valueRange = 1f..365f,
+        onValueChange = {
+            daysBack.intValue = it.toInt()
+        })
+
+    Button(onClick = {
+        callback(checksPerDay.intValue, daysBack.intValue)
+    }) {
+        Text("Generate fake data")
+    }
+}
 
 @Composable
 fun AdminPage(
@@ -44,21 +78,21 @@ fun AdminPage(
             color = MaterialTheme.colorScheme.background
         ) {
             Column(modifier = Modifier.verticalScroll(scrollState)) {
-                Button(onClick = {
-                    viewModel.addPastChecks(context, generateFakePastChecks()) {
+                PageHeader("Generate fake data")
+                GenerateFakeDateSection { checksPerDay, daysBack ->
+                    viewModel.addPastChecks(
+                        context, generateFakePastChecks(daysBack, checksPerDay)) {
                         Toast.makeText(
                             context, "Fake checks added to history!",
                             Toast.LENGTH_SHORT).show()
                     }
-                }) {
-                    Text("Generate fake data")
                 }
-                Text("Planned checks:", style = TextStyle(fontSize = 20.sp))
+                PageHeader("Planned Checks")
                 Text(
                     text = plannedChecksFlowState.value.toList().sortedBy { it.millis }
                         .toString()
                 )
-                Text("Historical checks:", style = TextStyle(fontSize = 20.sp))
+                PageHeader("Historical Checks")
                 Text(
                     text = pastChecksFlowState.value.toList().sortedBy { it.planned.millis }
                         .toString()

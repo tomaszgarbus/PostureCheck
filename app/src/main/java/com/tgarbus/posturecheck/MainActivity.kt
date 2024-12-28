@@ -7,7 +7,6 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.core.content.ContextCompat

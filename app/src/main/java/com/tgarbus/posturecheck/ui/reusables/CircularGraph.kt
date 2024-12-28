@@ -28,12 +28,10 @@ fun CircularGraph(
     Canvas(
         modifier = canvasModifier
     ) {
-        Log.d("tomek", "size1 ${size}")
         val radius = min(size.width / 2, size.height) - strokeWidth / 2
         inset(
             size.width / 2 - radius,
             size.height / 2 - radius) {
-            Log.d("tomek", "size2 ${size}")
             var sumAngles = startingAngle
             for (entry in entries) {
                 val sweepAngle = circleMinusBuffers * (entry.percentage / 100f)

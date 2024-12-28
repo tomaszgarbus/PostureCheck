@@ -21,14 +21,12 @@ class NotificationResponseService : Service() {
     super.onStartCommand(intent, flags, startId)
     val context = this
     val pastCheck: PastPostureCheck = PastPostureCheck.fromBundle(intent!!.extras!!)
-    Log.i("tomek", "NotificationResponseService: pastCheck: " + pastCheck.toString())
     scope.launch {
       val plannedChecksRepo = PlannedChecksRepository(context)
       val pastChecksRepo = PastChecksRepository(context)
       val plannedCheck = pastCheck.withoutReply()
       pastChecksRepo.addPastCheck(pastCheck)
       plannedChecksRepo.deletePlannedCheck(plannedCheck)
-      Log.i("tomek", "Recorded response")
       stopSelf(startId)
     }
     val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
@@ -37,12 +35,10 @@ class NotificationResponseService : Service() {
   }
 
   override fun onBind(intent: Intent): IBinder? {
-    Log.i("tomek", "NotificationResponseService::onBind")
     return null
   }
 
   override fun onDestroy() {
-    Log.i("tomek", "NotificationResponseService::onDestroy")
     super.onDestroy()
     // TODO: implement fault recovery for `job` or try to block until it finishes.
     job.cancel()

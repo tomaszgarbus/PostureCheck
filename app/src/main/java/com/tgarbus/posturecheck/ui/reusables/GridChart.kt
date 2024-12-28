@@ -78,7 +78,6 @@ fun WeekGridChart(
         val maxEntriesBeforeMinTime = columns.maxOf { it.countEntriesBeforeTime(minTimeOfDay) }
         val maxEntriesAfterMaxTime = columns.maxOf { it.countEntriesAfterTime(maxTimeOfDay) }
         val maxEntriesBetweenLines = columns.maxOf { it.countEntriesBetweenTimes(minTimeOfDay, maxTimeOfDay) }
-        Log.d("tomek", "debug week grid chart $maxEntriesBeforeMinTime $maxEntriesBetweenLines $maxEntriesAfterMaxTime")
 
         // Add some padding on the right so that the last label can fit.
         val rightPadding = textMeasurer.measure(columns.last().label, textStyle).size.width / 2f
