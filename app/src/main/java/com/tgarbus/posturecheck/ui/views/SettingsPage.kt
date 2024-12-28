@@ -21,7 +21,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tgarbus.posturecheck.R
 import com.tgarbus.posturecheck.data.DefaultSettings
 import com.tgarbus.posturecheck.data.SettingsViewModel
-import com.tgarbus.posturecheck.data.TimeOfDay
 import com.tgarbus.posturecheck.ui.reusables.NumberPicker
 import com.tgarbus.posturecheck.ui.reusables.PageHeader
 import com.tgarbus.posturecheck.ui.reusables.ScrollableFullScreenColumn

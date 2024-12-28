@@ -1,0 +1,9 @@
+- Add "Send test notification button"
+- Line chart for all time
+- Grid chart for month
+- Grid chart for all time
+- Notifications screen
+- Add "New stats available" toast
+- Implement intro screen
+- Add text to splash screen
+- Change notification icon

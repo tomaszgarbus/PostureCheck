@@ -87,7 +87,7 @@ fun WeekGridChart(
         val chartHeight = size.height - xAxisLabelsHeight
         val columnWidth = chartWidth / columns.size
 
-        val maxCircleSize = min(columnWidth, chartHeight / columns.maxOf { it.entries.size })
+        val maxCircleSize = min(columnWidth, chartHeight / (maxEntriesBeforeMinTime + maxEntriesBetweenLines + maxEntriesAfterMaxTime))
 
         val firstLineY = maxEntriesBeforeMinTime * maxCircleSize
         val secondLineY = (maxEntriesBeforeMinTime + maxEntriesBetweenLines) * maxCircleSize
@@ -97,7 +97,7 @@ fun WeekGridChart(
             left = 0f,
             top = 0f,
             right = size.width - yAxisLabelsWidth,
-            bottom = xAxisLabelsHeight
+            bottom = 0f
         ) {
             drawText(
                 text = minTimeOfDayText,

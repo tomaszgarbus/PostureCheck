@@ -52,6 +52,10 @@ fun interpolateCubicBezierAtX(
             + p3 * t.pow(3))
 }
 
+fun valueToDisplayText(value: Float): String {
+    return "%d%%".format((value * 100).toInt())
+}
+
 @Composable
 fun LineChart(
     entries: ArrayList<LineChartEntry>,
@@ -258,7 +262,7 @@ fun LineChart(
                         }
                     }
                     // Draw Round Rectangle to the left or right of the moving line.
-                    val popupText = "${closestEntry.label}: ${closestEntry.value}"
+                    val popupText = "${closestEntry.label}: ${valueToDisplayText(closestEntry.value)}"
                     val textMeasuredSize = textMeasurer.measure(popupText, textStyle).size.toSize()
                     val rectPad = 10f
                     val rectSize = Size(

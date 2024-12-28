@@ -6,6 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -155,6 +158,18 @@ fun Summary(answersDistribution: AnswersDistribution) {
 }
 
 @Composable
+fun GridChartLegendEntry(
+    color: Color, text: String
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Box(modifier = Modifier.clip(CircleShape).size(28.dp).background(color)) {}
+        Text(text, style = h4.copy(color = colorResource(R.color.subtitle_gray)))
+    }
+}
+
+@Composable
 fun LineChartDisplay(entries: ArrayList<LineChartEntry>) {
     Row(
         modifier = Modifier
@@ -170,19 +185,33 @@ fun LineChartDisplay(entries: ArrayList<LineChartEntry>) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun WeekGridChartDisplay(
     columns: ArrayList<WeekGridChartColumn>, minTimeOfDay: TimeOfDay, maxTimeOfDay: TimeOfDay) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .aspectRatio(1.5f)
-            .clip(RoundedCornerShape(24.dp))
-            .background(Color.White)
-            .padding(20.dp),
-        horizontalArrangement = Arrangement.spacedBy(20.dp),
+    Column (modifier = Modifier
+        .fillMaxWidth()
+        .clip(RoundedCornerShape(24.dp))
+        .background(Color.White)
+        .padding(20.dp)
     ) {
-        WeekGridChart(columns, minTimeOfDay, maxTimeOfDay, canvasModifier = Modifier.fillMaxSize())
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1.5f),
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
+        ) {
+            WeekGridChart(columns, minTimeOfDay, maxTimeOfDay, canvasModifier = Modifier.fillMaxSize())
+        }
+        FlowRow(
+            modifier = Modifier,
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            GridChartLegendEntry(colorResource(R.color.accent_yellow), "Straight posture")
+            GridChartLegendEntry(colorResource(R.color.dark_green), "Slouching")
+            GridChartLegendEntry(colorResource(R.color.spacer_grey), "No answer / skipped")
+        }
     }
 }
 
@@ -300,12 +329,23 @@ fun StatisticsPage(
         ChartBlock(
             activeChartType.value, pastChecks.value, selectedPeriod.value, minTimeOfDay.value,
             maxTimeOfDay.value)
+
+        // Allow more scroll.
+        Spacer(modifier = Modifier.height(100.dp))
     }
     Box(modifier = Modifier.fillMaxSize().padding(20.dp, 32.dp)) {
-        DropdownMenu(
-            modifier = Modifier.align(Alignment.TopEnd),
-            options = listOf(weekDropdownOption, monthDropdownOption, allTimeDropdownOption),
-            default = weekDropdownOption
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween) {
+            Box(modifier = Modifier.size(56.dp).clip(CircleShape).background(Color.White),
+                contentAlignment = Alignment.Center) {
+                Image(painterResource(R.drawable.notifications), "Notifications",
+                    alignment = Alignment.Center)
+            }
+            DropdownMenu(
+                options = listOf(weekDropdownOption, monthDropdownOption, allTimeDropdownOption),
+                default = weekDropdownOption
+            )
+        }
     }
 }
