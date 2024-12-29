@@ -51,16 +51,6 @@ data class WeekGridChartColumn(
     }
 }
 
-data class MonthGridChartWeekSpec(
-    val firstDay: Day,
-    val lastDay: Day,
-    val entriesPerDay: ArrayList<ArrayList<PostureCheckReply>>,
-)
-
-data class MonthGridChartSpec(
-    val weeks: ArrayList<MonthGridChartWeekSpec>
-)
-
 data class GridChartEntry(
     val color: Color
 )
