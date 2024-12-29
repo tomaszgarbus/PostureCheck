@@ -71,6 +71,8 @@ fun AdminPage(
             PlannedChecksRepository(LocalContext.current).getPlannedChecksAsFlow().collectAsState(
                 initial = HashSet()
             )
+        val showPlannedChecks = remember { mutableStateOf(false) }
+        val showPastChecks = remember { mutableStateOf(false) }
         val scrollState = rememberScrollState()
         // A surface container using the 'background' color from the theme
         Surface(
@@ -88,15 +90,23 @@ fun AdminPage(
                     }
                 }
                 PageHeader("Planned Checks")
-                Text(
-                    text = plannedChecksFlowState.value.toList().sortedBy { it.millis }
-                        .toString()
-                )
+                if (showPlannedChecks.value) {
+                    Text(
+                        text = plannedChecksFlowState.value.toList().sortedBy { it.millis }
+                            .toString()
+                    )
+                } else {
+                    Button(onClick = {showPlannedChecks.value = true}) { Text("Show planned checks (may be slow)") }
+                }
                 PageHeader("Historical Checks")
-                Text(
-                    text = pastChecksFlowState.value.toList().sortedBy { it.planned.millis }
-                        .toString()
-                )
+                if (showPastChecks.value) {
+                    Text(
+                        text = pastChecksFlowState.value.toList().sortedBy { it.planned.millis }
+                            .toString()
+                    )
+                } else {
+                    Button(onClick = {showPastChecks.value = true}) { Text("Show past checks (may be slow)") }
+                }
             }
         }
     }
