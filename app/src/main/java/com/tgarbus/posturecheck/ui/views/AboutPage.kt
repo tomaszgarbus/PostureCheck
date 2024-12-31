@@ -8,10 +8,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -97,8 +96,8 @@ fun AboutPage() {
         modifier = Modifier
             .fillMaxSize()
             .background(colorResource(R.color.light_mint))
-            .safeContentPadding()
-            .padding(20.dp)
+            .safeDrawingPadding()
+            .padding(horizontal = 20.dp)
     ) {
         PageHeader(
             "How to check posture?",

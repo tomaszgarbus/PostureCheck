@@ -7,37 +7,63 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.tgarbus.posturecheck.ui.views.AboutPage
 import com.tgarbus.posturecheck.ui.views.AdminPage
 import com.tgarbus.posturecheck.ui.views.NavigationFloat
 import com.tgarbus.posturecheck.ui.views.NavigationPage
+import com.tgarbus.posturecheck.ui.views.NotificationsPage
+import com.tgarbus.posturecheck.ui.views.OnboardingPage
 import com.tgarbus.posturecheck.ui.views.SettingsPage
 import com.tgarbus.posturecheck.ui.views.StatisticsPage
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 
         setContent {
-            val currentPage = remember { mutableStateOf(NavigationPage.STATISTICS) }
-            when (currentPage.value) {
-                NavigationPage.ADMIN -> AdminPage()
-                NavigationPage.STATISTICS -> StatisticsPage()
-                NavigationPage.ABOUT -> AboutPage()
-                NavigationPage.SETTINGS -> SettingsPage(triggerRecompute = {
-                    val intent = Intent(
-                        baseContext, RecomputeNextNotificationsBroadcastReceiver::class.java)
-                    sendBroadcast(intent)
-                })
+            val navController = rememberNavController()
+            NavHost(navController = navController,
+                startDestination = "main",
+                enterTransition = { EnterTransition.None },
+                exitTransition = { ExitTransition.None },
+                modifier = Modifier.fillMaxSize()) {
+                composable("main") {
+                    val currentPage = remember { mutableStateOf(NavigationPage.STATISTICS) }
+                    when (currentPage.value) {
+                        NavigationPage.ADMIN -> AdminPage(navController)
+                        NavigationPage.STATISTICS -> StatisticsPage(navController)
+                        NavigationPage.ABOUT -> AboutPage()
+                        NavigationPage.SETTINGS -> SettingsPage(triggerRecompute = {
+                            val intent = Intent(
+                                baseContext, RecomputeNextNotificationsBroadcastReceiver::class.java)
+                            sendBroadcast(intent)
+                        })
+                    }
+                    NavigationFloat(
+                        currentPage = currentPage.value,
+                        onPageChanged = {
+                            currentPage.value = it
+                        })
+                }
+                composable("notifications") {
+                    NotificationsPage(navController)
+                }
+                composable("onboarding") {
+                    OnboardingPage(navController)
+                }
             }
-            NavigationFloat(
-                currentPage = currentPage.value,
-                onPageChanged = {
-                    currentPage.value = it
-                })
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             when (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)) {

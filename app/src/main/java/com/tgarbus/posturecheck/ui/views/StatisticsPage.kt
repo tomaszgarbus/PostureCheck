@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
@@ -37,6 +38,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.tgarbus.posturecheck.R
 import com.tgarbus.posturecheck.data.AnswersDistribution
 import com.tgarbus.posturecheck.data.DefaultSettings
@@ -286,6 +288,7 @@ fun ChartBlock(
 
 @Composable
 fun StatisticsPage(
+    navController: NavController,
     viewModel: StatisticsViewModel = viewModel(),
 ) {
     val selectedPeriod = remember { mutableStateOf(PeriodType.WEEK) }
@@ -333,11 +336,17 @@ fun StatisticsPage(
         // Allow more scroll.
         Spacer(modifier = Modifier.height(100.dp))
     }
-    Box(modifier = Modifier.fillMaxSize().padding(20.dp, 32.dp)) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .safeDrawingPadding()
+        .padding(horizontal = 20.dp)
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween) {
-            Box(modifier = Modifier.size(56.dp).clip(CircleShape).background(Color.White),
+            Box(modifier = Modifier
+                .size(56.dp).clip(CircleShape).background(Color.White)
+                .clickable { navController.navigate("notifications") },
                 contentAlignment = Alignment.Center) {
                 Image(painterResource(R.drawable.notifications), "Notifications",
                     alignment = Alignment.Center)

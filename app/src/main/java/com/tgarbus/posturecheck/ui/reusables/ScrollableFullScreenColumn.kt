@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -27,7 +27,6 @@ fun ScrollableFullScreenColumn(
         modifier = modifier
             .fillMaxSize()
             .background(colorResource(R.color.light_mint))
-            .safeContentPadding()
     ) {
         Column(modifier = Modifier.height(headerHeight)) {  }
         val scrollState = rememberScrollState()
@@ -35,7 +34,8 @@ fun ScrollableFullScreenColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
-                .padding(20.dp),
+                .safeDrawingPadding()
+                .padding(horizontal = 20.dp),
             verticalArrangement = verticalArrangement,
         ) {
             content()

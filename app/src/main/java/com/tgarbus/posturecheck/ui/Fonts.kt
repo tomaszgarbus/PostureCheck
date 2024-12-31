@@ -15,5 +15,8 @@ class Fonts {
             Font(R.font.mulish_italic, FontWeight.Normal, FontStyle.Italic),
             Font(R.font.mulish_bolditalic, FontWeight.Bold, FontStyle.Italic)
         )
+        val aboretoFontFamily = FontFamily(
+            Font(R.font.aboreto_regular, FontWeight.Normal)
+        )
     }
 }

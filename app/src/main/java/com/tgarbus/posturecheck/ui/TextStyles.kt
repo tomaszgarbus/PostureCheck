@@ -3,6 +3,7 @@ package com.tgarbus.posturecheck.ui
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.tgarbus.posturecheck.ui.Fonts.Companion.aboretoFontFamily
 import com.tgarbus.posturecheck.ui.Fonts.Companion.mulishFontFamily
 
 class TextStyles {
@@ -12,6 +13,12 @@ class TextStyles {
             lineHeight = 57.6.sp,
             fontFamily = mulishFontFamily,
             fontWeight = FontWeight.Bold,
+        )
+        val welcomeHeader = TextStyle(
+            fontSize = 24.sp,
+            lineHeight = 36.sp,
+            fontFamily = aboretoFontFamily,
+            fontWeight = FontWeight.Normal,
         )
         val h1 = TextStyle(
             fontSize = 24.sp,
