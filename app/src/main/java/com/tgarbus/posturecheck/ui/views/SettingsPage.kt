@@ -3,6 +3,7 @@ package com.tgarbus.posturecheck.ui.views
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,18 +19,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.tgarbus.posturecheck.R
 import com.tgarbus.posturecheck.data.DefaultSettings
 import com.tgarbus.posturecheck.data.SettingsViewModel
 import com.tgarbus.posturecheck.ui.reusables.NumberPicker
 import com.tgarbus.posturecheck.ui.reusables.PageHeader
+import com.tgarbus.posturecheck.ui.reusables.PrimaryButton
 import com.tgarbus.posturecheck.ui.reusables.ScrollableFullScreenColumn
+import com.tgarbus.posturecheck.ui.reusables.SendTestNotificationButton
 import com.tgarbus.posturecheck.ui.reusables.SettingsItem
 import com.tgarbus.posturecheck.ui.reusables.TimePickerSettingsItemWithDialog
 
 @Composable
 fun SettingsPage(
     viewModel: SettingsViewModel = viewModel(),
+    navController: NavController,
     triggerRecompute: () -> Unit
 ) {
     val context = LocalContext.current
@@ -82,6 +87,16 @@ fun SettingsPage(
             } else {
                 viewModel.setLatestNotificationTime(context, timeOfDay)
                 triggerRecompute()
+            }
+        }
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            SendTestNotificationButton(context)
+        }
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            PrimaryButton("Show introduction again") {
+                navController.navigate("onboarding")
             }
         }
 

@@ -46,6 +46,7 @@ class NotificationAlarmBroadcastReceiver : BroadcastReceiver() {
       intent.putExtras(plannedPostureCheck.withReply(reply).toBundle())
       // TODO: Rewrite construction of request code to make it clear there can be no collision.
       val requestCode = plannedPostureCheck.notificationId() + reply.ordinal
+      // TODO: Comment why FLAG_UPDATE_CURRENT and FLAG_MUTABLE are needed.
       PendingIntent.getService(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
     }
   }

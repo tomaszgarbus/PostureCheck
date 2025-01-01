@@ -1,5 +1,4 @@
 - Add "Send test notification button"
-- Line chart for all time
 - Grid chart for month
 - Grid chart for all time
 - Notifications screen
@@ -7,3 +6,5 @@
 - Implement intro screen
 - Add text to splash screen
 - Change notification icon
+- Show intro screen on first run
+- Test the app on emulated wearos

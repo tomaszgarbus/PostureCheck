@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -40,9 +41,12 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.ColorUtils
 import androidx.navigation.NavController
 import com.tgarbus.posturecheck.R
+import com.tgarbus.posturecheck.sendTestNotification
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.h2
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.h3
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.welcomeHeader
+import com.tgarbus.posturecheck.ui.reusables.PrimaryButton
+import com.tgarbus.posturecheck.ui.reusables.SendTestNotificationButton
 import kotlin.math.abs
 
 val kOnboardingTexts = arrayOf(
@@ -158,6 +162,7 @@ fun PagerController(numPages: Int, pagerState: PagerState, onScrollBeyondLastPag
 
 @Composable
 fun LetsGetStartedScreen(navController: NavController) {
+    val context = LocalContext.current
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -169,28 +174,10 @@ fun LetsGetStartedScreen(navController: NavController) {
             textAlign = TextAlign.Center,
         )
         Image(painterResource(R.drawable.onboarding_lets_get_started), "Let's get started ")
-        Button(
-            onClick = {
-                navController.navigate("main")
-            },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = colorResource(R.color.dark_green),
-                contentColor = Color.White
-            )
-        ) {
-            Text("Take me to the app!")
+        PrimaryButton("Take me to the app!") {
+            navController.navigate("main")
         }
-        OutlinedButton(
-            onClick = {
-                navController.navigate("main")
-            },
-            border = BorderStroke(1.dp, color = colorResource(R.color.dark_green)),
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = colorResource(R.color.dark_green)
-            )
-        ) {
-            Text("Send test notification")
-        }
+        SendTestNotificationButton(context)
     }
 }
 

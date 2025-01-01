@@ -46,10 +46,11 @@ class MainActivity : ComponentActivity() {
                         NavigationPage.STATISTICS -> StatisticsPage(navController)
                         NavigationPage.ABOUT -> AboutPage()
                         NavigationPage.SETTINGS -> SettingsPage(triggerRecompute = {
-                            val intent = Intent(
-                                baseContext, RecomputeNextNotificationsBroadcastReceiver::class.java)
-                            sendBroadcast(intent)
-                        })
+                                val intent = Intent(
+                                    baseContext, RecomputeNextNotificationsBroadcastReceiver::class.java)
+                                sendBroadcast(intent)
+                            },
+                            navController = navController)
                     }
                     NavigationFloat(
                         currentPage = currentPage.value,
