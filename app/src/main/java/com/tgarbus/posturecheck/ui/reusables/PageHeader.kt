@@ -11,16 +11,17 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.tgarbus.posturecheck.R
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.h1
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.h4
 
 @Composable
-fun PageHeader(text: String, subtitleText: String? = null) {
+fun PageHeader(text: String, subtitleText: String? = null, modifier: Modifier = Modifier.fillMaxWidth()) {
     Column (
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp, alignment = Alignment.CenterVertically)
     ) {
         Text(
             text,

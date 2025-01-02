@@ -332,9 +332,6 @@ fun StatisticsPage(
         ChartBlock(
             activeChartType.value, pastChecks.value, selectedPeriod.value, minTimeOfDay.value,
             maxTimeOfDay.value)
-
-        // Allow more scroll.
-        Spacer(modifier = Modifier.height(100.dp))
     }
     Box(modifier = Modifier
         .fillMaxSize()

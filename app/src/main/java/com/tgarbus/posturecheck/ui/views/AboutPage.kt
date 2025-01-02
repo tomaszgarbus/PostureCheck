@@ -31,6 +31,7 @@ import com.tgarbus.posturecheck.ui.TextStyles.Companion.aboutPageNumber
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.h2
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.h3
 import com.tgarbus.posturecheck.ui.reusables.PageHeader
+import com.tgarbus.posturecheck.ui.reusables.ScrollableFullScreenColumn
 import kotlin.math.absoluteValue
 import kotlin.math.max
 
@@ -92,13 +93,7 @@ fun AboutCard(number: Int, header: String, description: String, painter: Painter
 @Composable
 fun AboutPage() {
     val pagerState = rememberPagerState { 6 }
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colorResource(R.color.light_mint))
-            .safeDrawingPadding()
-            .padding(horizontal = 20.dp)
-    ) {
+    ScrollableFullScreenColumn {
         PageHeader(
             "How to check posture?",
             subtitleText = "Simple tips to check and improve your posture. Start by learning these habits, but once you know what to look for, a quick check can take just seconds. For any concerns or pain, please consult a healthcare professional.")

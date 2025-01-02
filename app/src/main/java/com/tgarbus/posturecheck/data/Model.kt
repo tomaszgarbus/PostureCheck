@@ -54,14 +54,6 @@ data class PlannedPostureCheck (
       checkCalendar.get(Calendar.YEAR) == todayCalendar.get(Calendar.YEAR)
   }
 
-  fun isInPast(): Boolean {
-    val checkCalendar = Calendar.getInstance()
-    checkCalendar.timeInMillis = this.millis
-    val nowCalendar = Calendar.getInstance()
-    nowCalendar.timeInMillis = System.currentTimeMillis()
-    return checkCalendar < nowCalendar
-  }
-
   override fun toString(): String {
     return "PlannedPostureCheck(${formatDate(SimpleDateFormat("dd-MM-yy HH:mm:ss"))}, ${id})"
   }
@@ -81,6 +73,15 @@ enum class PostureCheckReply {
   GOOD,
   BAD,
   NOT_APPLICABLE,
+}
+
+fun PostureCheckReply.toDisplayableString(): String {
+  return when (this) {
+    PostureCheckReply.NO_ANSWER -> "No answer"
+    PostureCheckReply.BAD -> "Bad posture"
+    PostureCheckReply.GOOD -> "Good posture"
+    PostureCheckReply.NOT_APPLICABLE -> "N/A"
+  }
 }
 
 data class PastPostureCheck (

@@ -18,6 +18,7 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.tgarbus.posturecheck.data.OnboardingRepository
 import com.tgarbus.posturecheck.ui.views.AboutPage
 import com.tgarbus.posturecheck.ui.views.AdminPage
 import com.tgarbus.posturecheck.ui.views.NavigationFloat
@@ -26,16 +27,28 @@ import com.tgarbus.posturecheck.ui.views.NotificationsPage
 import com.tgarbus.posturecheck.ui.views.OnboardingPage
 import com.tgarbus.posturecheck.ui.views.SettingsPage
 import com.tgarbus.posturecheck.ui.views.StatisticsPage
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        createNotificationChannel(baseContext)
+
         enableEdgeToEdge()
+
+        var isIntroScreenCompleted: Boolean
+        runBlocking {
+            isIntroScreenCompleted = OnboardingRepository(
+                baseContext).isIntroScreenCompleted().first()
+        }
 
         setContent {
             val navController = rememberNavController()
+            val startingPoint = if (isIntroScreenCompleted) "main" else "onboarding"
             NavHost(navController = navController,
-                startDestination = "main",
+                startDestination = startingPoint,
                 enterTransition = { EnterTransition.None },
                 exitTransition = { ExitTransition.None },
                 modifier = Modifier.fillMaxSize()) {

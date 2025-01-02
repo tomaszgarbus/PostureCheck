@@ -1,10 +1,8 @@
-- Add "Send test notification button"
 - Grid chart for month
 - Grid chart for all time
-- Notifications screen
 - Add "New stats available" toast
-- Implement intro screen
 - Add text to splash screen
 - Change notification icon
-- Show intro screen on first run
 - Test the app on emulated wearos
+- Bug: AlarmReceiver triggers recompute -> RecomputeService triggers alarm -> Alarm triggers AlarmReceiver
+  this causes infinite circle forever if there is an outstanding notification

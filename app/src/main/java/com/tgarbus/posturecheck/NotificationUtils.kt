@@ -1,6 +1,8 @@
 package com.tgarbus.posturecheck
 
 import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -12,6 +14,22 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 
 const val kTestNotificationId = -1
+const val kNotificationText = "Hey, how's your posture?"
+const val kChecksNotificationChannel = "kanał sport"
+
+fun createNotificationChannel(context: Context) {
+    // TODO: set up channel better
+    val name = "my notification channel"
+    val descriptionText = "my freaking notification channel"
+    val importance = NotificationManager.IMPORTANCE_DEFAULT
+    val channel = NotificationChannel(kChecksNotificationChannel, name, importance).apply {
+        description = descriptionText
+    }
+    // Register the channel with the system.
+    val notificationManager: NotificationManager =
+        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    notificationManager.createNotificationChannel(channel)
+}
 
 // Builds a pending intent to be executed when user takes any action. The notification will then
 // be dismissed by NotificationResponseService.
@@ -28,9 +46,9 @@ fun buildPendingIntentForDismissal(context: Context): PendingIntent {
 }
 
 fun sendTestNotification(context: Context) {
-    val builder = NotificationCompat.Builder(context, NotificationConstants.channelId)
-        .setSmallIcon(R.drawable.ic_launcher_foreground)
-        .setContentTitle("Hey, how's your posture?")
+    val builder = NotificationCompat.Builder(context, kChecksNotificationChannel)
+        .setSmallIcon(R.drawable.notification_icon)
+        .setContentTitle(kNotificationText)
         .setPriority(NotificationCompat.PRIORITY_MAX)
         .addAction(R.drawable.ic_launcher_foreground, "Good",
             buildPendingIntentForDismissal(context))

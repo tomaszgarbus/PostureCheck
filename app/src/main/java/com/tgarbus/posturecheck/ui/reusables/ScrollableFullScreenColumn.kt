@@ -3,6 +3,7 @@ package com.tgarbus.posturecheck.ui.reusables
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -39,6 +40,9 @@ fun ScrollableFullScreenColumn(
             verticalArrangement = verticalArrangement,
         ) {
             content()
+
+            // Allow more scroll.
+            Spacer(modifier = Modifier.height(100.dp))
         }
     }
 }

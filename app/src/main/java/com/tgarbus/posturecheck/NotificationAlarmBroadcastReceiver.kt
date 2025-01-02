@@ -17,26 +17,7 @@ import com.tgarbus.posturecheck.data.PastPostureCheck
 import com.tgarbus.posturecheck.data.PlannedPostureCheck
 import com.tgarbus.posturecheck.data.PostureCheckReply
 
-object NotificationConstants {
-  // TODO: to niepoważne
-  const val channelId = "kanał sport"
-}
-
 class NotificationAlarmBroadcastReceiver : BroadcastReceiver() {
-
-  private fun createNotificationChannel(context: Context) {
-    // TODO: set up channel better
-    val name = "my notification channel"
-    val descriptionText = "my freaking notification channel"
-    val importance = NotificationManager.IMPORTANCE_DEFAULT
-    val channel = NotificationChannel(NotificationConstants.channelId, name, importance).apply {
-      description = descriptionText
-    }
-    // Register the channel with the system.
-    val notificationManager: NotificationManager =
-      context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-    notificationManager.createNotificationChannel(channel)
-  }
 
   private fun buildPendingIntentForReply(
     reply: PostureCheckReply, plannedPostureCheck: PlannedPostureCheck,
@@ -52,14 +33,12 @@ class NotificationAlarmBroadcastReceiver : BroadcastReceiver() {
   }
 
   override fun onReceive(context: Context, intent: Intent) {
-    createNotificationChannel(context)
-
     val plannedPostureCheck = PlannedPostureCheck.fromBundle(intent.extras!!)
     Log.i("tomek", "NotificationAlarmBroadcastReceiver: PlannedPostureCheck: " + plannedPostureCheck.toString())
 
-    val builder = NotificationCompat.Builder(context, NotificationConstants.channelId)
-      .setSmallIcon(R.drawable.ic_launcher_foreground)
-      .setContentTitle("Hey, how's your posture?")
+    val builder = NotificationCompat.Builder(context, kChecksNotificationChannel)
+      .setSmallIcon(R.drawable.notification_icon)
+      .setContentTitle(kNotificationText)
       .setPriority(NotificationCompat.PRIORITY_MAX)
       .addAction(R.drawable.ic_launcher_foreground, "Good", buildPendingIntentForReply(
         PostureCheckReply.GOOD, plannedPostureCheck, context))

@@ -1,6 +1,5 @@
 package com.tgarbus.posturecheck.ui.views
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,10 +19,7 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -39,9 +35,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.ColorUtils
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tgarbus.posturecheck.R
-import com.tgarbus.posturecheck.sendTestNotification
+import com.tgarbus.posturecheck.data.OnboardingViewModel
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.h2
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.h3
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.welcomeHeader
@@ -161,7 +158,7 @@ fun PagerController(numPages: Int, pagerState: PagerState, onScrollBeyondLastPag
 }
 
 @Composable
-fun LetsGetStartedScreen(navController: NavController) {
+fun LetsGetStartedScreen(navController: NavController, viewModel: OnboardingViewModel = viewModel()) {
     val context = LocalContext.current
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -175,6 +172,7 @@ fun LetsGetStartedScreen(navController: NavController) {
         )
         Image(painterResource(R.drawable.onboarding_lets_get_started), "Let's get started ")
         PrimaryButton("Take me to the app!") {
+            viewModel.markOnboardingCompleted(context)
             navController.navigate("main")
         }
         SendTestNotificationButton(context)
