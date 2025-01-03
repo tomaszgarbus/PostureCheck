@@ -1,10 +1,12 @@
 package com.tgarbus.posturecheck.data
 
-import android.util.Log
 import com.tgarbus.posturecheck.ui.reusables.LineChartEntry
-import com.tgarbus.posturecheck.ui.reusables.WeekGridChartColumn
-import com.tgarbus.posturecheck.ui.reusables.WeekGridChartEntry
+import com.tgarbus.posturecheck.ui.reusables.GridChartColumnInput
+import com.tgarbus.posturecheck.ui.reusables.GridChartEntryInput
 import java.util.Collections.min
+
+// Number of GOOD/BAD answers required to show the stats.
+const val kShowStatsThreshold = 10
 
 data class AnswersDistribution(
     var goodPostureCount: Int,
@@ -218,7 +220,7 @@ fun buildAnswersDistribution(pastPostureChecks: Collection<PastPostureCheck>): A
 }
 
 fun buildWeekGridChartColumns(
-    checks: Collection<PastPostureCheck>, includeToday: Boolean): ArrayList<WeekGridChartColumn>? {
+    checks: Collection<PastPostureCheck>, includeToday: Boolean): ArrayList<GridChartColumnInput>? {
     val days = lastWeek(includeToday)
     val groupedByDay = groupPastChecksByDay(checks)
     for (day in days) {
@@ -226,15 +228,57 @@ fun buildWeekGridChartColumns(
             return null
         }
     }
-    val result: ArrayList<WeekGridChartColumn> = arrayListOf()
+    val result: ArrayList<GridChartColumnInput> = arrayListOf()
     for (day in days) {
-        val column = WeekGridChartColumn(
+        val column = GridChartColumnInput(
             label = day.getDayOfWeek(),
             entries = ArrayList(groupedByDay[day]!!.map {
-                WeekGridChartEntry(time = it.planned.getTimeOfDay(), reply = it.reply)
+                GridChartEntryInput(time = it.planned.getTimeOfDay(), reply = it.reply)
             })
         )
         result.add(column)
     }
     return result
+}
+
+fun buildMonthGridChartColumns(
+    checks: Collection<PastPostureCheck>, includeToday: Boolean): ArrayList<GridChartColumnInput>? {
+    val days = lastMonth(includeToday)
+    val groupedByDay = groupPastChecksByDay(checks)
+    for (day in days) {
+        if (!groupedByDay.contains(day)) {
+            return null
+        }
+    }
+    val result: ArrayList<GridChartColumnInput> = arrayListOf()
+    for ((i, day) in days.withIndex()) {
+        val column = GridChartColumnInput(
+            label = if (i % 7 == 0) day.toShortString() else null,
+            entries = ArrayList(groupedByDay[day]!!.map {
+                GridChartEntryInput(time = it.planned.getTimeOfDay(), reply = it.reply)
+            })
+        )
+        result.add(column)
+    }
+    return result
+}
+
+fun buildGridChartColumnsForPeriod(
+    checks: Collection<PastPostureCheck>,
+    period: PeriodType, includeToday: Boolean
+): ArrayList<GridChartColumnInput>? {
+    return when (period) {
+        PeriodType.WEEK -> buildWeekGridChartColumns(checks, includeToday)
+        PeriodType.MONTH -> buildMonthGridChartColumns(checks, includeToday)
+        else -> null
+    }
+}
+
+fun shouldOnlyShowBePatientBanner(
+    answersDistribution: AnswersDistribution?
+): Boolean {
+    if (answersDistribution == null) {
+        return true
+    }
+    return answersDistribution.goodPostureCount + answersDistribution.badPostureCount < kShowStatsThreshold
 }

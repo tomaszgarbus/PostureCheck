@@ -7,8 +7,11 @@
         <item name="android:colorPrimary">@color/dark_green</item>
         <item name="android:textColorPrimary">@color/dark_green</item>
         <item name="android:colorPrimaryDark">@color/dark_green</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
 
         <!-- Splash screen -->
         <item name="android:windowSplashScreenBackground">@color/mint</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/logotype_posture_check</item>
+        <item name="android:windowSplashScreenAnimationDuration">1000</item>
     </style>
 </resources>

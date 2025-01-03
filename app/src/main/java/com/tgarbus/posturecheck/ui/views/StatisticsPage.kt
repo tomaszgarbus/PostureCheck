@@ -35,6 +35,7 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -47,21 +48,25 @@ import com.tgarbus.posturecheck.data.PeriodType
 import com.tgarbus.posturecheck.data.StatisticsViewModel
 import com.tgarbus.posturecheck.data.TimeOfDay
 import com.tgarbus.posturecheck.data.buildAnswersDistribution
+import com.tgarbus.posturecheck.data.buildGridChartColumnsForPeriod
 import com.tgarbus.posturecheck.data.buildLineChartEntriesForPeriod
-import com.tgarbus.posturecheck.data.buildWeekGridChartColumns
 import com.tgarbus.posturecheck.data.percentBad
 import com.tgarbus.posturecheck.data.percentGood
 import com.tgarbus.posturecheck.data.percentNoAnswer
+import com.tgarbus.posturecheck.data.shouldOnlyShowBePatientBanner
+import com.tgarbus.posturecheck.ui.TextStyles.Companion.h3
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.h4
 import com.tgarbus.posturecheck.ui.reusables.CircularGraph
 import com.tgarbus.posturecheck.ui.reusables.CircularGraphComponent
 import com.tgarbus.posturecheck.ui.reusables.DropdownMenu
 import com.tgarbus.posturecheck.ui.reusables.DropdownOption
+import com.tgarbus.posturecheck.ui.reusables.GridChartColumnInput
+import com.tgarbus.posturecheck.ui.reusables.GridChartOnCanvas
 import com.tgarbus.posturecheck.ui.reusables.LineChart
 import com.tgarbus.posturecheck.ui.reusables.LineChartEntry
 import com.tgarbus.posturecheck.ui.reusables.ScrollableFullScreenColumn
-import com.tgarbus.posturecheck.ui.reusables.WeekGridChart
-import com.tgarbus.posturecheck.ui.reusables.WeekGridChartColumn
+import com.tgarbus.posturecheck.ui.reusables.buildHorizontalGridChartSpec
+import kotlin.math.min
 
 // https://stackoverflow.com/questions/70057396/how-to-show-vertical-text-with-proper-size-layout-in-jetpack-compose
 fun Modifier.rotateVertically(clockwise: Boolean = true): Modifier {
@@ -189,8 +194,9 @@ fun LineChartDisplay(entries: ArrayList<LineChartEntry>) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun WeekGridChartDisplay(
-    columns: ArrayList<WeekGridChartColumn>, minTimeOfDay: TimeOfDay, maxTimeOfDay: TimeOfDay) {
+fun GridChartDisplay(
+    columns: ArrayList<GridChartColumnInput>, minTimeOfDay: TimeOfDay, maxTimeOfDay: TimeOfDay) {
+    val spec = buildHorizontalGridChartSpec(columns, minTimeOfDay, maxTimeOfDay, LocalContext.current)
     Column (modifier = Modifier
         .fillMaxWidth()
         .clip(RoundedCornerShape(24.dp))
@@ -200,10 +206,10 @@ fun WeekGridChartDisplay(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(1.5f),
+                .aspectRatio(min(5f, spec.numColumns.toFloat() / spec.numRows)),
             horizontalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            WeekGridChart(columns, minTimeOfDay, maxTimeOfDay, canvasModifier = Modifier.fillMaxSize())
+            GridChartOnCanvas(spec, canvasModifier = Modifier.fillMaxSize())
         }
         FlowRow(
             modifier = Modifier,
@@ -265,6 +271,21 @@ fun ChartTypeSwitcher(
 }
 
 @Composable
+fun NoDataForChartText(selectedPeriod: PeriodType) {
+    Row(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
+        val text = when (selectedPeriod) {
+            PeriodType.WEEK -> "Oops! We need consistent data from last week to show you this chart!"
+            PeriodType.MONTH -> "Sorry! Can't show the month chart until we have posture check results for each day!"
+            PeriodType.ALL_TIME -> "Be patient! We need more data to build this chart."
+        }
+        Text(
+            text,
+            style = h3.copy(color = colorResource(R.color.subtitle_gray))
+        )
+    }
+}
+
+@Composable
 fun ChartBlock(
     activeChartType: ChartType,
     pastChecks: Set<PastPostureCheck>,
@@ -276,13 +297,46 @@ fun ChartBlock(
         val chartEntries = buildLineChartEntriesForPeriod(selectedPeriod, pastChecks, false)
         if (chartEntries != null) {
             LineChartDisplay(chartEntries)
+        } else {
+            NoDataForChartText(selectedPeriod)
         }
     }
     if (activeChartType == ChartType.GRID) {
-        val chartColumns = buildWeekGridChartColumns(pastChecks, false)
+        val chartColumns = buildGridChartColumnsForPeriod(pastChecks, selectedPeriod, false)
         if (chartColumns != null) {
-            WeekGridChartDisplay(chartColumns, minTimeOfDay, maxTimeOfDay)
+            GridChartDisplay(chartColumns, minTimeOfDay, maxTimeOfDay)
+        } else {
+            NoDataForChartText(selectedPeriod)
         }
+    }
+}
+
+@Composable
+fun BePatientBlock() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(colorResource(R.color.mint))
+            .padding(25.dp),
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.spacedBy(18.dp)
+    ) {
+        Text(
+            "Be patient!",
+            style = h4.copy(Color.White),
+            textAlign = TextAlign.Start,
+        )
+        Text(
+            "We know you want to see your progress, but let us collect some stats for a few more days.",
+            style = h3.copy(colorResource(R.color.dark_green)),
+            textAlign = TextAlign.Start,
+        )
+        Text(
+            "Good habits aren't built overnight.",
+            style = h4.copy(Color.White),
+            textAlign = TextAlign.Start,
+        )
     }
 }
 
@@ -307,6 +361,7 @@ fun StatisticsPage(
     val answersDistribution = buildAnswersDistribution(
         pastChecks.value
     )
+    val showOnlyBePatientBanner = shouldOnlyShowBePatientBanner(answersDistribution)
     val activeChartType = remember { mutableStateOf(ChartType.LINE) }
     val minTimeOfDay = viewModel.getMinTimeOfDay(LocalContext.current).collectAsState(
         DefaultSettings.defaultEarliestNotificationTime)
@@ -315,23 +370,28 @@ fun StatisticsPage(
     ScrollableFullScreenColumn(
         headerHeight = 86.dp,
         verticalArrangement = Arrangement.spacedBy(20.dp)) {
-        if (answersDistribution != null) {
-            Summary(answersDistribution)
-        }
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-            ChartTypeSwitcher(
-                activeChartType = activeChartType.value,
-                onLineChartSelected = {
-                    activeChartType.value = ChartType.LINE
-                },
-                onGridChartSelected = {
-                    activeChartType.value = ChartType.GRID
-                }
+        if (showOnlyBePatientBanner) {
+            BePatientBlock()
+        } else {
+            if (answersDistribution != null) {
+                Summary(answersDistribution)
+            }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                ChartTypeSwitcher(
+                    activeChartType = activeChartType.value,
+                    onLineChartSelected = {
+                        activeChartType.value = ChartType.LINE
+                    },
+                    onGridChartSelected = {
+                        activeChartType.value = ChartType.GRID
+                    }
+                )
+            }
+            ChartBlock(
+                activeChartType.value, pastChecks.value, selectedPeriod.value, minTimeOfDay.value,
+                maxTimeOfDay.value
             )
         }
-        ChartBlock(
-            activeChartType.value, pastChecks.value, selectedPeriod.value, minTimeOfDay.value,
-            maxTimeOfDay.value)
     }
     Box(modifier = Modifier
         .fillMaxSize()

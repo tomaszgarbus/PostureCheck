@@ -1,8 +1,8 @@
-- Grid chart for month
 - Grid chart for all time
-- Add "New stats available" toast
-- Add text to splash screen
-- Change notification icon
 - Test the app on emulated wearos
 - Bug: AlarmReceiver triggers recompute -> RecomputeService triggers alarm -> Alarm triggers AlarmReceiver
   this causes infinite circle forever if there is an outstanding notification
+- Show notification when new stats are available
+- Add one more card to the intro after discussing with Svetlana
+- Add in settings a button to allow notifications (go to settings to enable them)
+- Implement the "temporarily disable notifications button"

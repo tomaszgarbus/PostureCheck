@@ -22,8 +22,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,7 +45,10 @@ import com.tgarbus.posturecheck.ui.TextStyles.Companion.h2
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.h3
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.welcomeHeader
 import com.tgarbus.posturecheck.ui.reusables.PrimaryButton
+import com.tgarbus.posturecheck.ui.reusables.SecondaryButton
 import com.tgarbus.posturecheck.ui.reusables.SendTestNotificationButton
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 val kOnboardingTexts = arrayOf(
@@ -98,6 +103,7 @@ fun OnboardingSlide(pageNumber: Int) {
 
 @Composable
 fun PagerController(numPages: Int, pagerState: PagerState, onScrollBeyondLastPage: () -> Unit) {
+    val animationScope = rememberCoroutineScope()
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 25.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -141,7 +147,9 @@ fun PagerController(numPages: Int, pagerState: PagerState, onScrollBeyondLastPag
                     .align(Alignment.Center)
                     .clickable {
                         if (pagerState.currentPage + 1 < numPages) {
-                            pagerState.requestScrollToPage(pagerState.currentPage + 1)
+                            animationScope.launch {
+                                pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                            }
                         } else {
                             onScrollBeyondLastPage()
                         }
@@ -158,7 +166,9 @@ fun PagerController(numPages: Int, pagerState: PagerState, onScrollBeyondLastPag
 }
 
 @Composable
-fun LetsGetStartedScreen(navController: NavController, viewModel: OnboardingViewModel = viewModel()) {
+fun LetsGetStartedScreen(
+    navController: NavController, viewModel: OnboardingViewModel = viewModel(),
+    onGoBack: () -> Unit) {
     val context = LocalContext.current
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -176,6 +186,7 @@ fun LetsGetStartedScreen(navController: NavController, viewModel: OnboardingView
             navController.navigate("main")
         }
         SendTestNotificationButton(context)
+        SecondaryButton("Go back") { onGoBack() }
     }
 }
 
@@ -184,6 +195,7 @@ fun OnboardingPage(navController: NavController) {
     val numPages = 4
     val pagerState = rememberPagerState { numPages }
     val showLetsGetStartedScreen = remember { mutableStateOf(false) }
+    val animationScope = rememberCoroutineScope()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -193,7 +205,12 @@ fun OnboardingPage(navController: NavController) {
         verticalArrangement = Arrangement.spacedBy(50.dp)
     ) {
         if (showLetsGetStartedScreen.value) {
-            LetsGetStartedScreen(navController)
+            LetsGetStartedScreen(navController, onGoBack = {
+                showLetsGetStartedScreen.value = false
+                animationScope.launch {
+                    pagerState.animateScrollToPage(0)
+                }
+            })
         }
         else {
             Row(

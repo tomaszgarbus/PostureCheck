@@ -1,5 +1,6 @@
 package com.tgarbus.posturecheck.ui.reusables
 
+import android.content.Context
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -10,31 +11,30 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import com.tgarbus.posturecheck.R
-import com.tgarbus.posturecheck.data.Day
 import com.tgarbus.posturecheck.data.PostureCheckReply
 import com.tgarbus.posturecheck.data.TimeOfDay
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.h4
 import kotlin.math.max
 import kotlin.math.min
 
-data class WeekGridChartEntry(
+data class GridChartEntryInput(
     val time: TimeOfDay,
     val reply: PostureCheckReply
 )
 
-data class WeekGridChartColumn(
-    val label: String,
-    val entries: ArrayList<WeekGridChartEntry>
+data class GridChartColumnInput(
+    val label: String?,
+    val entries: ArrayList<GridChartEntryInput>
 ) {
-    fun entriesBeforeTime(time: TimeOfDay): ArrayList<WeekGridChartEntry> {
+    fun entriesBeforeTime(time: TimeOfDay): ArrayList<GridChartEntryInput> {
         return ArrayList(entries.filter { it.time < time }.sortedBy { it.time })
     }
 
-    fun entriesAfterTime(time: TimeOfDay): ArrayList<WeekGridChartEntry> {
+    fun entriesAfterTime(time: TimeOfDay): ArrayList<GridChartEntryInput> {
         return ArrayList(entries.filter { it.time > time }.sortedBy { it.time })
     }
 
-    fun entriesBetweenTimes(minTime: TimeOfDay, maxTime: TimeOfDay): ArrayList<WeekGridChartEntry> {
+    fun entriesBetweenTimes(minTime: TimeOfDay, maxTime: TimeOfDay): ArrayList<GridChartEntryInput> {
         return ArrayList(entries.filter { it.time in minTime..maxTime }.sortedBy { it.time })
     }
 
@@ -51,7 +51,7 @@ data class WeekGridChartColumn(
     }
 }
 
-data class GridChartEntry(
+data class GridChartCircleSpec(
     val color: Color
 )
 
@@ -63,7 +63,7 @@ data class GridChartHorizontalLineSpec(
 data class GridChartSpec(
     val numRows: Int,
     val numColumns: Int,
-    val entries: ArrayList<ArrayList<GridChartEntry?>>,  // Indexed entries[column][row]
+    val entries: ArrayList<ArrayList<GridChartCircleSpec?>>,  // Indexed entries[column][row]
     val columnLabels: ArrayList<String?>,
     val horizontalLineSpecs: ArrayList<GridChartHorizontalLineSpec>,
 )
@@ -165,12 +165,14 @@ fun GridChartOnCanvas(
     }
 }
 
-@Composable
-fun WeekGridChart(
-    columns: ArrayList<WeekGridChartColumn>,
+// Builds a spec for a GridChart where Y axis is time of day anf X axis are consecutive days.
+// It contains two guide lines corresponding to mix and max notification time.
+fun buildHorizontalGridChartSpec(
+    columns: ArrayList<GridChartColumnInput>,
     minTimeOfDay: TimeOfDay,
     maxTimeOfDay: TimeOfDay,
-    canvasModifier: Modifier) {
+    context: Context,
+): GridChartSpec {
     val maxEntriesBeforeMinTime = columns.maxOf { it.countEntriesBeforeTime(minTimeOfDay) }
     val maxEntriesAfterMaxTime = columns.maxOf { it.countEntriesAfterTime(maxTimeOfDay) }
     val maxEntriesBetweenLines = columns.maxOf { it.countEntriesBetweenTimes(minTimeOfDay, maxTimeOfDay) }
@@ -187,41 +189,37 @@ fun WeekGridChart(
         ),
     )
     val columnLabels = ArrayList(columns.map { it.label })
-    val entries: ArrayList<ArrayList<GridChartEntry?>> = ArrayList((0..<numColumns).map {
+    val entries: ArrayList<ArrayList<GridChartCircleSpec?>> = ArrayList((0..<numColumns).map {
         ArrayList((0..<numRows).map { null })
     })
     val replyToColor = mapOf(
-        PostureCheckReply.GOOD to colorResource(R.color.accent_yellow),
-        PostureCheckReply.BAD to colorResource(R.color.dark_green),
-        PostureCheckReply.NOT_APPLICABLE to colorResource(R.color.light_mint),
-        PostureCheckReply.NO_ANSWER to colorResource(R.color.light_mint),
+        PostureCheckReply.GOOD to Color(context.getColor(R.color.accent_yellow)),
+        PostureCheckReply.BAD to Color(context.getColor(R.color.dark_green)),
+        PostureCheckReply.NOT_APPLICABLE to Color(context.getColor(R.color.light_mint)),
+        PostureCheckReply.NO_ANSWER to Color(context.getColor(R.color.light_mint)),
     )
     for (col in 0..<numColumns) {
         val entriesBefore = columns[col].entriesBeforeTime(minTimeOfDay)
         for (i in 0..<entriesBefore.size) {
             val row = maxEntriesBeforeMinTime - entriesBefore.size + i
-            entries[col][row] = GridChartEntry(color = replyToColor[entriesBefore[i].reply]!!)
+            entries[col][row] = GridChartCircleSpec(color = replyToColor[entriesBefore[i].reply]!!)
         }
         val entriesBetween = columns[col].entriesBetweenTimes(minTimeOfDay, maxTimeOfDay)
         for (i in 0..<entriesBetween.size) {
             val row = maxEntriesBeforeMinTime + i
-            entries[col][row] = GridChartEntry(color = replyToColor[entriesBetween[i].reply]!!)
+            entries[col][row] = GridChartCircleSpec(color = replyToColor[entriesBetween[i].reply]!!)
         }
         val entriesAfter = columns[col].entriesAfterTime(maxTimeOfDay)
         for (i in 0..<entriesAfter.size) {
             val row = maxEntriesBeforeMinTime + maxEntriesBetweenLines + i
-            entries[col][row] = GridChartEntry(color = replyToColor[entriesAfter[i].reply]!!)
+            entries[col][row] = GridChartCircleSpec(color = replyToColor[entriesAfter[i].reply]!!)
         }
     }
-    val spec = GridChartSpec(
+    return GridChartSpec(
         numRows = numRows,
         numColumns = numColumns,
         entries = entries,
         columnLabels = columnLabels,
         horizontalLineSpecs = horizontalLineSpecs,
-    )
-    GridChartOnCanvas(
-        spec,
-        canvasModifier
     )
 }
