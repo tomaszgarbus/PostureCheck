@@ -22,7 +22,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -47,13 +46,13 @@ import com.tgarbus.posturecheck.ui.TextStyles.Companion.welcomeHeader
 import com.tgarbus.posturecheck.ui.reusables.PrimaryButton
 import com.tgarbus.posturecheck.ui.reusables.SecondaryButton
 import com.tgarbus.posturecheck.ui.reusables.SendTestNotificationButton
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 val kOnboardingTexts = arrayOf(
     "Focus on progress, not perfection. Be kind to yourself — habits aren't built overnight.",
     "Three times a day, we'll ask about your posture. Just respond honestly, and you're all set!",
+    "Of course, we will track your progress for you.",
     "Over time, you'll naturally become more mindful of maintaining good posture.",
 )
 
@@ -85,6 +84,7 @@ fun OnboardingSlide(pageNumber: Int) {
         1 -> R.drawable.onboarding_1
         2 -> R.drawable.onboarding_2
         3 -> R.drawable.onboarding_3
+        4 -> R.drawable.onboarding_4
         else -> -1
     }
     Column(
@@ -192,7 +192,7 @@ fun LetsGetStartedScreen(
 
 @Composable
 fun OnboardingPage(navController: NavController) {
-    val numPages = 4
+    val numPages = 5
     val pagerState = rememberPagerState { numPages }
     val showLetsGetStartedScreen = remember { mutableStateOf(false) }
     val animationScope = rememberCoroutineScope()
@@ -236,6 +236,7 @@ fun OnboardingPage(navController: NavController) {
                     1 -> OnboardingSlide(1)
                     2 -> OnboardingSlide(2)
                     3 -> OnboardingSlide(3)
+                    4 -> OnboardingSlide(4)
                 }
             }
             PagerController(numPages, pagerState) {

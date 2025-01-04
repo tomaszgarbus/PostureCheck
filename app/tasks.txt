@@ -1,8 +1,12 @@
+- Implement non-strict mode in buildLineChartEntriesForDays
+- Implement custom distances between columns in LineChart (expressed as weights)
+- Implement option to delete past checks through the admin page
 - Grid chart for all time
+- Implement line chart for first > 0 entries (show times then)
+- Send first notifications already on the first day
+- Send first notification immediately after onboarding
 - Test the app on emulated wearos
-- Bug: AlarmReceiver triggers recompute -> RecomputeService triggers alarm -> Alarm triggers AlarmReceiver
-  this causes infinite circle forever if there is an outstanding notification
 - Show notification when new stats are available
-- Add one more card to the intro after discussing with Svetlana
 - Add in settings a button to allow notifications (go to settings to enable them)
-- Implement the "temporarily disable notifications button"
+- Implement the "temporarily disable notifications" button
+- Yes, we will have banner with text about it, but up to 7 days we can show line chart to present current progress. Is it possible to do so? Without switcher to grid chart, without dropdown with time periods.

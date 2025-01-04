@@ -17,10 +17,8 @@ import com.tgarbus.posturecheck.data.recomputeNotificationsForDay
 import com.tgarbus.posturecheck.data.validateNotificationsForDay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import java.sql.Time
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import kotlin.random.Random.Default.nextInt
 
 class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
     // TODO: handle different locale
@@ -99,15 +97,8 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
     }
 
     private fun getEarliestFutureCheck(plannedChecks: Set<PlannedPostureCheck>): PlannedPostureCheck {
-        var earliest = plannedChecks.first()
         val timeNow = System.currentTimeMillis()
-        for (check in plannedChecks) {
-            if (check.millis > timeNow &&
-                check.millis < earliest.millis) {
-                earliest = check
-            }
-        }
-        return earliest
+        return plannedChecks.filter { it.millis > timeNow }.minBy { it.millis }
     }
 
     override fun onReceive(context: Context, intent: Intent) {

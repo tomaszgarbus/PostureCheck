@@ -1,5 +1,7 @@
 package com.tgarbus.posturecheck.ui.views
 
+import android.content.Intent
+import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tgarbus.posturecheck.R
@@ -25,14 +28,17 @@ import com.tgarbus.posturecheck.ui.reusables.NumberPicker
 import com.tgarbus.posturecheck.ui.reusables.PageHeader
 import com.tgarbus.posturecheck.ui.reusables.PrimaryButton
 import com.tgarbus.posturecheck.ui.reusables.ScrollableFullScreenColumn
+import com.tgarbus.posturecheck.ui.reusables.SecondaryButton
 import com.tgarbus.posturecheck.ui.reusables.SendTestNotificationButton
 import com.tgarbus.posturecheck.ui.reusables.SettingsItem
 import com.tgarbus.posturecheck.ui.reusables.TimePickerSettingsItemWithDialog
+
 
 @Composable
 fun SettingsPage(
     viewModel: SettingsViewModel = viewModel(),
     navController: NavController,
+    openNotificationSettings: () -> Unit,
     triggerRecompute: () -> Unit
 ) {
     val context = LocalContext.current
@@ -74,7 +80,9 @@ fun SettingsPage(
             }
         }
 
-        Spacer(modifier = Modifier.fillMaxWidth().height(0.5.dp)
+        Spacer(modifier = Modifier
+            .fillMaxWidth()
+            .height(0.5.dp)
             .background(colorResource(R.color.spacer_grey)))
 
         TimePickerSettingsItemWithDialog(
@@ -95,6 +103,12 @@ fun SettingsPage(
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
             PrimaryButton("Show introduction again") {
                 navController.navigate("onboarding")
+            }
+        }
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            SecondaryButton("System settings for notifications") {
+                openNotificationSettings()
             }
         }
 
