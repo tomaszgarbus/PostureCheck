@@ -1,8 +1,11 @@
 package com.tgarbus.posturecheck.ui.views
 
 import android.widget.Toast
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
@@ -17,6 +20,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -27,6 +31,7 @@ import com.tgarbus.posturecheck.data.PastChecksRepository
 import com.tgarbus.posturecheck.data.PlannedChecksRepository
 import com.tgarbus.posturecheck.data.generateFakePastChecks
 import com.tgarbus.posturecheck.ui.reusables.PageHeader
+import kotlinx.coroutines.launch
 
 @Composable
 fun GenerateFakeDateSection(
@@ -59,10 +64,20 @@ fun GenerateFakeDateSection(
 }
 
 @Composable
+fun CheckEntry(checkStr: String, onDelete: () -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(checkStr)
+        Button(onDelete) { Text("Delete") }
+    }
+}
+
+@Composable
 fun AdminPage(
     navController: NavController,
     viewModel: AdminViewModel = viewModel()
 ) {
+    val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     Column (
         modifier = Modifier
@@ -107,6 +122,14 @@ fun AdminPage(
                 }
                 PageHeader("Historical Checks")
                 if (showPastChecks.value) {
+                    for (check in pastChecksFlowState.value.toList().sortedBy { it.planned.millis }) {
+                        CheckEntry("${check.planned.getDay().toShortString()}: ${check.reply}") { coroutineScope.launch {
+                            PastChecksRepository(context).deleteCheck(
+                                check.planned.id,
+                                check.planned.getDay()
+                            )
+                        } }
+                    }
                     Text(
                         text = pastChecksFlowState.value.toList().sortedBy { it.planned.millis }
                             .toString()

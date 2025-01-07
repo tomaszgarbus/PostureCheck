@@ -76,6 +76,20 @@ class PastChecksRepository(private val context: Context) {
     preferences[daysWithEntriesKey] = daysWithEvents
   }
 
+  private fun deleteIdFromList(id: String, day: Day, preferences: MutablePreferences) {
+    // Delete id from that day.
+    val idsPerDay = preferences[idsPerDayKey(day)]?.let { HashSet(it) } ?: HashSet()
+    idsPerDay.remove(id)
+    preferences[idsPerDayKey(day)] = idsPerDay
+
+    // Now, if there are no other checks for this day, delete this day completely.
+    if (idsPerDay.isEmpty()) {
+      val daysWithEvents = preferences[daysWithEntriesKey]?.let { HashSet(it) } ?: HashSet()
+      daysWithEvents.remove(day.toString())
+      preferences[daysWithEntriesKey] = daysWithEvents
+    }
+  }
+
   private fun addPastCheckToPreferences(preferences: MutablePreferences, pastPostureCheck: PastPostureCheck) {
     preferences[millisKey(pastPostureCheck.planned.id)] = pastPostureCheck.planned.millis
     preferences[replyKey(pastPostureCheck.planned.id)] = pastPostureCheck.reply.name
@@ -93,6 +107,13 @@ class PastChecksRepository(private val context: Context) {
   suspend fun addPastCheck(pastPostureCheck: PastPostureCheck) {
     context.pastChecksDataStore.edit { preferences ->
       addPastCheckToPreferences(preferences, pastPostureCheck)
+    }
+  }
+
+  // ADMIN ONLY!!
+  suspend fun deleteCheck(id: String, day: Day) {
+    context.pastChecksDataStore.edit { mutablePreferences ->
+      deleteIdFromList(id, day, mutablePreferences)
     }
   }
 }

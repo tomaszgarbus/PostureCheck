@@ -1,12 +1,13 @@
 package com.tgarbus.posturecheck.data
 
+import android.util.Log
 import com.tgarbus.posturecheck.ui.reusables.LineChartEntry
 import com.tgarbus.posturecheck.ui.reusables.GridChartColumnInput
 import com.tgarbus.posturecheck.ui.reusables.GridChartEntryInput
 import java.util.Collections.min
 
 // Number of GOOD/BAD answers required to show the stats.
-const val kShowStatsThreshold = 10
+const val kShowStatsThreshold = 2
 
 data class AnswersDistribution(
     var goodPostureCount: Int,
@@ -74,6 +75,7 @@ fun buildLineChartEntriesForDays(
     pastPostureChecks: Collection<PastPostureCheck>,
     dayToLabel: (Day) -> String,
     dayToShowLabel: (Day) -> Boolean,
+    bestEffort: Boolean = true
 ): ArrayList<LineChartEntry>? {
     val aggregates = HashMap<Day, AnswersDistribution>()
     for (check in pastPostureChecks) {
@@ -83,13 +85,40 @@ fun buildLineChartEntriesForDays(
         aggregates[check.planned.getDay()]!!.increment(check.reply)
     }
     val entries = ArrayList<LineChartEntry>()
-    for (day in days) {
-        if (!aggregates.contains(day)) {
-            return null
+    if (bestEffort) {
+        var previousAggregate: AnswersDistribution? = null
+        for (day in days) {
+            val aggregate = aggregates[day] ?: previousAggregate
+            previousAggregate = aggregate
+            Log.d("tomek", "debug line chart building: $day $aggregate")
+            aggregate?.let {
+                entries.add(
+                    buildLineChartEntry(
+                        dayToLabel(day),
+                        dayToShowLabel(day),
+                        it
+                    )
+                )
+            }
         }
-        entries.add(buildLineChartEntry(dayToLabel(day), dayToShowLabel(day), aggregates[day]!!))
+    } else {
+        for (day in days) {
+            if (!aggregates.contains(day)) {
+                return null
+            }
+            entries.add(
+                buildLineChartEntry(
+                    dayToLabel(day),
+                    dayToShowLabel(day),
+                    aggregates[day]!!
+                )
+            )
+        }
     }
-    return entries
+    if (entries.size > 1) {
+        return entries
+    }
+    return null
 }
 
 fun buildLastWeekLineChartEntries(
