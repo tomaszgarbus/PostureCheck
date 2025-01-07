@@ -46,6 +46,7 @@ class NotificationAlarmBroadcastReceiver : BroadcastReceiver() {
         PostureCheckReply.BAD, plannedPostureCheck, context))
       .addAction(R.drawable.ic_launcher_foreground, "N/A", buildPendingIntentForReply(
         PostureCheckReply.NOT_APPLICABLE, plannedPostureCheck, context))
+    builder.setOngoing(true)
     with(NotificationManagerCompat.from(context)) {
       if (ActivityCompat.checkSelfPermission(
           context,

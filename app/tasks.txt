@@ -1,6 +1,3 @@
-- Implement non-strict mode in buildLineChartEntriesForDays
-- Implement option to delete past checks through the admin page
-- Implement skipping some column labels if they overlap
 - Grid chart for all time
 - Implement line chart for first > 0 entries (show times then)
 - Send first notifications already on the first day

@@ -56,7 +56,7 @@ fun sendTestNotification(context: Context) {
             buildPendingIntentForDismissal(context))
         .addAction(R.drawable.ic_launcher_foreground, "N/A",
             buildPendingIntentForDismissal(context))
-
+    builder.setOngoing(true)
     with(NotificationManagerCompat.from(context)) {
         if (ActivityCompat.checkSelfPermission(
                 context,
