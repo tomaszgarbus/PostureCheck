@@ -14,7 +14,7 @@ class TextStyles {
             fontFamily = mulishFontFamily,
             fontWeight = FontWeight.Bold,
         )
-        val welcomeHeader = TextStyle(
+        val header = TextStyle(
             fontSize = 24.sp,
             lineHeight = 36.sp,
             fontFamily = aboretoFontFamily,

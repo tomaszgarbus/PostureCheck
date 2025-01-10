@@ -5,5 +5,9 @@
 - Test the app on emulated wearos
 - Show notification when new stats are available
 - Add in settings a button to allow notifications (go to settings to enable them)
-- Implement the "temporarily disable notifications" button
+- Implement or delete the "temporarily disable notifications" button
 - Yes, we will have banner with text about it, but up to 7 days we can show line chart to present current progress. Is it possible to do so? Without switcher to grid chart, without dropdown with time periods.
+- Implement in-app notifications
+- Add "schedule notification 10s from now" option in Admin settings
+- Import/export progress file
+- Fix grid chart for missing data

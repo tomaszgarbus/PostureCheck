@@ -18,11 +18,13 @@ class PlannedChecksRepository(private val context: Context) {
   private val idsKey: Preferences.Key<Set<String>> = stringSetPreferencesKey("planned_posture_checks_ids")
   private val millisKey: (String) -> Preferences.Key<Long> = { pccId -> longPreferencesKey("${pccId}_millis") }
 
-  private fun getPlannedPostureCheckById(id: String, preferences: Preferences): PlannedPostureCheck {
-    return PlannedPostureCheck(
-      id = id,
-      millis = preferences[millisKey(id)]!!,
-    )
+  private fun getPlannedPostureCheckById(id: String, preferences: Preferences): PlannedPostureCheck? {
+    return preferences[millisKey(id)]?.let {
+      PlannedPostureCheck(
+        id = id,
+        millis = it,
+      )
+    }
   }
 
   fun getPlannedChecksAsFlow(): Flow<Set<PlannedPostureCheck>> {
@@ -30,7 +32,7 @@ class PlannedChecksRepository(private val context: Context) {
       val plannedChecks = HashSet<PlannedPostureCheck>()
       val allIds: Set<String> = preferences[idsKey] ?: HashSet()
       for (id in allIds) {
-        plannedChecks.add(getPlannedPostureCheckById(id, preferences))
+        plannedChecks.add(getPlannedPostureCheckById(id, preferences)!!)
       }
       Log.i("tomek", plannedChecks.toString())
       plannedChecks

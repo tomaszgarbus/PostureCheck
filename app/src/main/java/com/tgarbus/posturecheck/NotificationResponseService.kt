@@ -2,16 +2,19 @@ package com.tgarbus.posturecheck
 
 import android.app.NotificationManager
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import com.tgarbus.posturecheck.data.LatestNotificationTimestampRepository
 import com.tgarbus.posturecheck.data.PastChecksRepository
 import com.tgarbus.posturecheck.data.PastPostureCheck
 import com.tgarbus.posturecheck.data.PlannedChecksRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-
 
 class NotificationResponseService : Service() {
   private val job = SupervisorJob()
@@ -21,21 +24,17 @@ class NotificationResponseService : Service() {
     super.onStartCommand(intent, flags, startId)
     val context = this
     val bundle = intent!!.extras!!
-    val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
     if (bundle.getBoolean("is_test_notification", false)) {
-      notificationManager.cancel(kTestNotificationId)
-      // TODO: Document why this is needed.
-      stopSelf(startId)
+      scope.launch {
+        dismissTestNotification(context)
+        // TODO: Document why this is needed.
+        stopSelf(startId)
+      }
       return START_REDELIVER_INTENT
     }
     val pastCheck: PastPostureCheck = PastPostureCheck.fromBundle(bundle)
     scope.launch {
-      val plannedChecksRepo = PlannedChecksRepository(context)
-      val pastChecksRepo = PastChecksRepository(context)
-      val plannedCheck = pastCheck.withoutReply()
-      pastChecksRepo.addPastCheck(pastCheck)
-      plannedChecksRepo.deletePlannedCheck(plannedCheck)
-      notificationManager.cancel(pastCheck.notificationId())
+      storeReplyAndCancelNotification(context, pastCheck)
       // TODO: Document why this is needed.
       stopSelf(startId)
     }

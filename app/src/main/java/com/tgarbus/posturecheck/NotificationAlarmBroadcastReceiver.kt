@@ -16,6 +16,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.tgarbus.posturecheck.data.PastPostureCheck
 import com.tgarbus.posturecheck.data.PlannedPostureCheck
 import com.tgarbus.posturecheck.data.PostureCheckReply
+import kotlinx.coroutines.awaitCancellation
 
 class NotificationAlarmBroadcastReceiver : BroadcastReceiver() {
 
@@ -64,8 +65,9 @@ class NotificationAlarmBroadcastReceiver : BroadcastReceiver() {
         return@with
       }
       Log.i("tomek", "zawiadamiam")
+      cancelAll()
       // notificationId is a unique int for each notification that you must define.
-      notify(plannedPostureCheck.notificationId(), builder.build())
+      notify(plannedPostureCheck.id, plannedPostureCheck.notificationId(), builder.build())
       context.sendBroadcast(Intent(context, RecomputeNextNotificationsBroadcastReceiver::class.java))
     }
   }

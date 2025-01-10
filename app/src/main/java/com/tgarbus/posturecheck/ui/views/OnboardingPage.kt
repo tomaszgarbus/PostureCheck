@@ -42,7 +42,7 @@ import com.tgarbus.posturecheck.R
 import com.tgarbus.posturecheck.data.OnboardingViewModel
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.h2
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.h3
-import com.tgarbus.posturecheck.ui.TextStyles.Companion.welcomeHeader
+import com.tgarbus.posturecheck.ui.TextStyles.Companion.header
 import com.tgarbus.posturecheck.ui.reusables.PrimaryButton
 import com.tgarbus.posturecheck.ui.reusables.SecondaryButton
 import com.tgarbus.posturecheck.ui.reusables.SendTestNotificationButton
@@ -65,7 +65,7 @@ fun WelcomePage() {
     ) {
         Text(
             "WELCOME TO POSTURE CHECK!",
-            style = welcomeHeader.copy(color = colorResource(R.color.dark_green)),
+            style = header.copy(color = colorResource(R.color.dark_green)),
             textAlign = TextAlign.Center,
         )
         Text(
@@ -177,7 +177,7 @@ fun LetsGetStartedScreen(
     ) {
         Text(
             "LET'S GET STARTED!",
-            style = welcomeHeader.copy(color = colorResource(R.color.dark_green)),
+            style = header.copy(color = colorResource(R.color.dark_green)),
             textAlign = TextAlign.Center,
         )
         Image(painterResource(R.drawable.onboarding_lets_get_started), "Let's get started ")

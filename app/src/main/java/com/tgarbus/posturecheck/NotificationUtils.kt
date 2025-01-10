@@ -9,11 +9,17 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.tgarbus.posturecheck.data.LatestNotificationTimestampRepository
+import com.tgarbus.posturecheck.data.PastChecksRepository
+import com.tgarbus.posturecheck.data.PastPostureCheck
+import com.tgarbus.posturecheck.data.PlannedChecksRepository
 
 const val kTestNotificationId = -1
+const val kTestNotificationTag = "test"
 const val kNotificationText = "Hey, how's your posture?"
 const val kChecksNotificationChannel = "kanał sport"
 
@@ -45,7 +51,7 @@ fun buildPendingIntentForDismissal(context: Context): PendingIntent {
     }
 }
 
-fun sendTestNotification(context: Context) {
+suspend fun sendTestNotification(context: Context) {
     val builder = NotificationCompat.Builder(context, kChecksNotificationChannel)
         .setSmallIcon(R.drawable.notification_icon)
         .setContentTitle(kNotificationText)
@@ -75,7 +81,49 @@ fun sendTestNotification(context: Context) {
         }
         Log.i("tomek", "zawiadamiam")
         // notificationId is a unique int for each notification that you must define.
-        notify(kTestNotificationId, builder.build())
+        notify(kTestNotificationTag, kTestNotificationId, builder.build())
         context.sendBroadcast(Intent(context, RecomputeNextNotificationsBroadcastReceiver::class.java))
+        LatestNotificationTimestampRepository(context).setLastNotificationTimestamp((System.currentTimeMillis() / 1000).toInt())
     }
+}
+
+// Currently displayed posture check.
+fun getCurrentPostureCheckId(context: Context, latestNotificationTimestamp: Int?): String? {
+    with(NotificationManagerCompat.from(context)) {
+        for (notification in activeNotifications) {
+            val checkId = notification.tag
+            Log.d("tomek", "Getting current posture check: $latestNotificationTimestamp")
+            return checkId
+        }
+    }
+    return null
+}
+
+suspend fun storeReplyAndCancelNotification(
+    context: Context,
+    pastPostureCheck: PastPostureCheck
+) {
+    val plannedChecksRepo = PlannedChecksRepository(context)
+    val pastChecksRepo = PastChecksRepository(context)
+    val plannedCheck = pastPostureCheck.withoutReply()
+    pastChecksRepo.addPastCheck(pastPostureCheck)
+    plannedChecksRepo.deletePlannedCheck(plannedCheck)
+    with(NotificationManagerCompat.from(context)) {
+        cancel(pastPostureCheck.planned.id, pastPostureCheck.notificationId())
+    }
+    LatestNotificationTimestampRepository(context).setLastNotificationTimestamp(
+        (System.currentTimeMillis() / 1000).toInt()
+    )
+    Toast.makeText(context, "Response saved!", Toast.LENGTH_SHORT).show()
+}
+
+suspend fun dismissTestNotification(
+    context: Context
+) {
+    with(NotificationManagerCompat.from(context)) {
+        cancel(kTestNotificationTag, kTestNotificationId)
+    }
+    LatestNotificationTimestampRepository(context).setLastNotificationTimestamp(
+        (System.currentTimeMillis() / 1000).toInt()
+    )
 }

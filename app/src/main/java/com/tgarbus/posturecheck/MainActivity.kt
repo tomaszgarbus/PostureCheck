@@ -23,6 +23,7 @@ import androidx.navigation.compose.rememberNavController
 import com.tgarbus.posturecheck.data.OnboardingRepository
 import com.tgarbus.posturecheck.ui.views.AboutPage
 import com.tgarbus.posturecheck.ui.views.AdminPage
+import com.tgarbus.posturecheck.ui.views.InAppNotificationContainer
 import com.tgarbus.posturecheck.ui.views.NavigationFloat
 import com.tgarbus.posturecheck.ui.views.NavigationPage
 import com.tgarbus.posturecheck.ui.views.NotificationsPage
@@ -52,41 +53,50 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             val startingPoint = if (isIntroScreenCompleted) "main" else "onboarding"
-            NavHost(navController = navController,
-                startDestination = startingPoint,
-                enterTransition = { EnterTransition.None },
-                exitTransition = { ExitTransition.None },
-                modifier = Modifier.fillMaxSize()) {
-                composable("main") {
-                    val currentPage = remember { mutableStateOf(NavigationPage.STATISTICS) }
-                    when (currentPage.value) {
-                        NavigationPage.ADMIN -> AdminPage(navController)
-                        NavigationPage.STATISTICS -> StatisticsPage(navController)
-                        NavigationPage.ABOUT -> AboutPage()
-                        NavigationPage.SETTINGS -> SettingsPage(triggerRecompute = {
-                                val intent = Intent(
-                                    baseContext, RecomputeNextNotificationsBroadcastReceiver::class.java)
-                                sendBroadcast(intent)
-                            },
-                            openNotificationSettings = {
-                                val settingsIntent: Intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    .putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
-                                ContextCompat.startActivity(baseContext, settingsIntent, null)
-                            },
-                            navController = navController)
+            InAppNotificationContainer {
+                NavHost(
+                    navController = navController,
+                    startDestination = startingPoint,
+                    enterTransition = { EnterTransition.None },
+                    exitTransition = { ExitTransition.None },
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    composable("main") {
+                        val currentPage = remember { mutableStateOf(NavigationPage.STATISTICS) }
+                        when (currentPage.value) {
+                            NavigationPage.ADMIN -> AdminPage(navController)
+                            NavigationPage.STATISTICS -> StatisticsPage(navController)
+                            NavigationPage.ABOUT -> AboutPage()
+                            NavigationPage.SETTINGS -> SettingsPage(
+                                triggerRecompute = {
+                                    val intent = Intent(
+                                        baseContext,
+                                        RecomputeNextNotificationsBroadcastReceiver::class.java
+                                    )
+                                    sendBroadcast(intent)
+                                },
+                                openNotificationSettings = {
+                                    val settingsIntent: Intent =
+                                        Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                            .putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                                    ContextCompat.startActivity(baseContext, settingsIntent, null)
+                                },
+                                navController = navController
+                            )
+                        }
+                        NavigationFloat(
+                            currentPage = currentPage.value,
+                            onPageChanged = {
+                                currentPage.value = it
+                            })
                     }
-                    NavigationFloat(
-                        currentPage = currentPage.value,
-                        onPageChanged = {
-                            currentPage.value = it
-                        })
-                }
-                composable("notifications") {
-                    NotificationsPage(navController)
-                }
-                composable("onboarding") {
-                    OnboardingPage(navController)
+                    composable("notifications") {
+                        NotificationsPage(navController)
+                    }
+                    composable("onboarding") {
+                        OnboardingPage(navController)
+                    }
                 }
             }
         }
