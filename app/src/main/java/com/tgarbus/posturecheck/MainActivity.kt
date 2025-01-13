@@ -1,14 +1,21 @@
 package com.tgarbus.posturecheck
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
+import android.content.Intent.ACTION_USER_BACKGROUND
+import android.content.Intent.ACTION_USER_FOREGROUND
+import android.content.Intent.ACTION_USER_PRESENT
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Build.VERSION_CODES.TIRAMISU
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.fillMaxSize
@@ -49,6 +56,12 @@ class MainActivity : ComponentActivity() {
             isIntroScreenCompleted = OnboardingRepository(
                 baseContext).isIntroScreenCompleted().first()
         }
+
+        val filter = IntentFilter()
+        filter.addAction(ACTION_USER_PRESENT)
+        filter.addAction(ACTION_USER_FOREGROUND)
+        ContextCompat.registerReceiver(baseContext, RecomputeNextNotificationsBroadcastReceiver(),
+            filter, if (Build.VERSION.SDK_INT >= TIRAMISU) ContextCompat.RECEIVER_EXPORTED else 0)
 
         setContent {
             val navController = rememberNavController()

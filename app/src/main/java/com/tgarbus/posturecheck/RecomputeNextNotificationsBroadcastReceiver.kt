@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import android.widget.Toast
 import com.tgarbus.posturecheck.data.Day
 import com.tgarbus.posturecheck.data.DefaultSettings
 import com.tgarbus.posturecheck.data.PlannedChecksRepository
