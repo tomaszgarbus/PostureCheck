@@ -1,6 +1,4 @@
 Need:
-- Grid chart for all time
-- Implement line chart for first > 0 entries (show times then)
 - Send first notifications already on the first day
 - Send first notification immediately after onboarding
 - Test the app on emulated wearos
@@ -13,3 +11,4 @@ Need:
 
 Want:
 - Show notification when new stats are available
+- Implement line chart for first > 0 entries (show times then)

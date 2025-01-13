@@ -308,6 +308,35 @@ fun buildMonthGridChartColumns(
     return result
 }
 
+fun buildAllTimeGridChartColumns(
+    checks: Collection<PastPostureCheck>, includeToday: Boolean,
+    showLabelEveryNth: Int = 7): ArrayList<GridChartColumnInput>? {
+    val groupedByDay = groupPastChecksByDay(checks)
+    val result: ArrayList<GridChartColumnInput> = arrayListOf()
+    val earliestDay = checks.minOf { it.planned.getDay() }
+    var latestDay = Day.today()
+    if (!includeToday) {
+        latestDay -= 1
+    }
+    var day = earliestDay
+    var i = 0
+    while (day <= latestDay) {
+        val column = GridChartColumnInput(
+            label = if (i % showLabelEveryNth == 0) day.toString() else null,
+            entries = ArrayList(groupedByDay[day]?.map {
+                GridChartEntryInput(time = it.planned.getTimeOfDay(), reply = it.reply)
+            } ?: arrayListOf())
+        )
+        result.add(column)
+        day += 1
+        i++
+    }
+    if (result.size < 2) {
+        return null
+    }
+    return result
+}
+
 fun buildGridChartColumnsForPeriod(
     checks: Collection<PastPostureCheck>,
     period: PeriodType, includeToday: Boolean
@@ -315,7 +344,7 @@ fun buildGridChartColumnsForPeriod(
     return when (period) {
         PeriodType.WEEK -> buildWeekGridChartColumns(checks, includeToday)
         PeriodType.MONTH -> buildMonthGridChartColumns(checks, includeToday)
-        else -> null
+        PeriodType.ALL_TIME -> buildAllTimeGridChartColumns(checks, includeToday)
     }
 }
 

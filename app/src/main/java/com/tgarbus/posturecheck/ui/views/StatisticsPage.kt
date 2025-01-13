@@ -3,6 +3,8 @@ package com.tgarbus.posturecheck.ui.views
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,7 +19,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -195,7 +199,8 @@ fun LineChartDisplay(entries: ArrayList<LineChartEntry>) {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun GridChartDisplay(
-    columns: ArrayList<GridChartColumnInput>, minTimeOfDay: TimeOfDay, maxTimeOfDay: TimeOfDay) {
+    periodType: PeriodType, columns: ArrayList<GridChartColumnInput>, minTimeOfDay: TimeOfDay,
+    maxTimeOfDay: TimeOfDay) {
     val spec = buildHorizontalGridChartSpec(columns, minTimeOfDay, maxTimeOfDay, LocalContext.current)
     Column (modifier = Modifier
         .fillMaxWidth()
@@ -203,13 +208,29 @@ fun GridChartDisplay(
         .background(Color.White)
         .padding(20.dp)
     ) {
-        Row(
-            modifier = Modifier
+        if (periodType == PeriodType.ALL_TIME) {
+            val scrollState = rememberScrollState()
+            val aspectRatio = min(300f, spec.numColumns.toFloat() / spec.numRows)
+            val height = 100
+            Row(modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(min(5f, spec.numColumns.toFloat() / spec.numRows)),
-            horizontalArrangement = Arrangement.spacedBy(20.dp),
-        ) {
-            GridChartOnCanvas(spec, canvasModifier = Modifier.fillMaxSize())
+                .height(height.dp)
+                .horizontalScroll(scrollState)) {
+                Row(modifier = Modifier
+                    .height(height.dp)
+                    .width((aspectRatio * height).dp)) {
+                    GridChartOnCanvas(spec, canvasModifier = Modifier.fillMaxSize())
+                }
+            }
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(min(5f, spec.numColumns.toFloat() / spec.numRows)),
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
+            ) {
+                GridChartOnCanvas(spec, canvasModifier = Modifier.fillMaxSize())
+            }
         }
         FlowRow(
             modifier = Modifier,
@@ -304,7 +325,7 @@ fun ChartBlock(
     if (activeChartType == ChartType.GRID) {
         val chartColumns = buildGridChartColumnsForPeriod(pastChecks, selectedPeriod, false)
         if (chartColumns != null) {
-            GridChartDisplay(chartColumns, minTimeOfDay, maxTimeOfDay)
+            GridChartDisplay(selectedPeriod, chartColumns, minTimeOfDay, maxTimeOfDay)
         } else {
             NoDataForChartText(selectedPeriod)
         }
