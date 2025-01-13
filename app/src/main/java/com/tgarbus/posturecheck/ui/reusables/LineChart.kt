@@ -53,7 +53,7 @@ fun interpolateCubicBezierAtX(
 }
 
 fun valueToDisplayText(value: Float): String {
-    return "%d%%".format((value * 100).toInt())
+    return "%d%% straight".format((value * 100).toInt())
 }
 
 @Composable

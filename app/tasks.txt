@@ -1,12 +1,15 @@
+Need:
 - Grid chart for all time
 - Implement line chart for first > 0 entries (show times then)
 - Send first notifications already on the first day
 - Send first notification immediately after onboarding
 - Test the app on emulated wearos
-- Show notification when new stats are available
 - Add in settings a button to allow notifications (go to settings to enable them)
 - Implement or delete the "temporarily disable notifications" button
-- Yes, we will have banner with text about it, but up to 7 days we can show line chart to present current progress. Is it possible to do so? Without switcher to grid chart, without dropdown with time periods.
 - Add "schedule notification 10s from now" option in Admin settings
 - Import/export progress file
-- Fix grid chart for missing data
+- Fallback to shorter period plot if it doesn't lose data, for example instead of all time show month if we only have data from one month.
+- On line chart show nicer labels
+
+Want:
+- Show notification when new stats are available

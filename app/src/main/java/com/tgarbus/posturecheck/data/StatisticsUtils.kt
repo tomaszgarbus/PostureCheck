@@ -156,6 +156,7 @@ fun buildLineChartEntriesForAllTime(
     includeToday: Boolean,
     numEntries: Int = 30,
     numShownLabels: Int = 8,
+    bestEffort: Boolean = true,
 ): ArrayList<LineChartEntry>? {
     val earliestDay = pastPostureChecks.minOf { it.planned.getDay() }
     var latestDay = Day.today()
@@ -169,15 +170,22 @@ fun buildLineChartEntriesForAllTime(
     var dayFrom = earliestDay
     val result = ArrayList<LineChartEntry>()
     val showLabelEveryNth = numEntries / numShownLabels + if (numEntries % numShownLabels > 0) 1 else 0
+    var prevAggregate: AnswersDistribution? = null
     while (dayFrom <= latestDay) {
         val dayTo = min(listOf(dayFrom + daysPerEntry - 1, latestDay))
         val checks = collectChecksFromInterval(groupedByDay, dayFrom, dayTo)
+        var distribution: AnswersDistribution? = AnswersDistribution.fromChecks(checks)
         if (checks.isEmpty()) {
-            return null
+            if (bestEffort) {
+                distribution = prevAggregate
+            } else {
+                return null
+            }
         }
         val showLabel = result.size % showLabelEveryNth == 0
-        result.add(buildLineChartEntry(dayFrom.toShortString(), showLabel, AnswersDistribution.fromChecks(checks)))
+        result.add(buildLineChartEntry(dayFrom.toShortString(), showLabel, distribution!!))
         dayFrom += daysPerEntry
+        prevAggregate = distribution
     }
     return result
 }
@@ -249,43 +257,51 @@ fun buildAnswersDistribution(pastPostureChecks: Collection<PastPostureCheck>): A
 }
 
 fun buildWeekGridChartColumns(
-    checks: Collection<PastPostureCheck>, includeToday: Boolean): ArrayList<GridChartColumnInput>? {
+    checks: Collection<PastPostureCheck>, includeToday: Boolean, bestEffort: Boolean = true): ArrayList<GridChartColumnInput>? {
     val days = lastWeek(includeToday)
     val groupedByDay = groupPastChecksByDay(checks)
-    for (day in days) {
-        if (!groupedByDay.contains(day)) {
-            return null
+    if (!bestEffort) {
+        for (day in days) {
+            if (!groupedByDay.contains(day)) {
+                return null
+            }
         }
     }
     val result: ArrayList<GridChartColumnInput> = arrayListOf()
     for (day in days) {
+        val entriesForDay = groupedByDay[day]
         val column = GridChartColumnInput(
             label = day.getDayOfWeek(),
-            entries = ArrayList(groupedByDay[day]!!.map {
+            entries = ArrayList(entriesForDay?.map {
                 GridChartEntryInput(time = it.planned.getTimeOfDay(), reply = it.reply)
-            })
+            } ?: arrayListOf())
         )
         result.add(column)
+    }
+    if (result.size < 2) {
+        return null
     }
     return result
 }
 
 fun buildMonthGridChartColumns(
-    checks: Collection<PastPostureCheck>, includeToday: Boolean): ArrayList<GridChartColumnInput>? {
+    checks: Collection<PastPostureCheck>, includeToday: Boolean, bestEffort: Boolean = true): ArrayList<GridChartColumnInput>? {
     val days = lastMonth(includeToday)
     val groupedByDay = groupPastChecksByDay(checks)
-    for (day in days) {
-        if (!groupedByDay.contains(day)) {
-            return null
+    if (!bestEffort) {
+        for (day in days) {
+            if (!groupedByDay.contains(day)) {
+                return null
+            }
         }
     }
     val result: ArrayList<GridChartColumnInput> = arrayListOf()
     for ((i, day) in days.withIndex()) {
         val column = GridChartColumnInput(
             label = if (i % 7 == 0) day.toShortString() else null,
-            entries = ArrayList(groupedByDay[day]!!.map {
+            entries = ArrayList(groupedByDay[day]?.map {
                 GridChartEntryInput(time = it.planned.getTimeOfDay(), reply = it.reply)
-            })
+            } ?: arrayListOf())
         )
         result.add(column)
     }
