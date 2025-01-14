@@ -1,9 +1,11 @@
 package com.tgarbus.posturecheck
 
 import android.Manifest
+import android.app.AlarmManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -13,10 +15,17 @@ import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.tgarbus.posturecheck.data.Day
 import com.tgarbus.posturecheck.data.LatestNotificationTimestampRepository
 import com.tgarbus.posturecheck.data.PastChecksRepository
 import com.tgarbus.posturecheck.data.PastPostureCheck
 import com.tgarbus.posturecheck.data.PlannedChecksRepository
+import com.tgarbus.posturecheck.data.PlannedPostureCheck
+import com.tgarbus.posturecheck.data.TimeOfDay
+import java.lang.Integer.max
+import java.sql.Time
+import java.util.Calendar
+import kotlin.random.Random.Default.nextInt
 
 const val kTestNotificationId = -1
 const val kTestNotificationTag = "test"
@@ -24,7 +33,6 @@ const val kNotificationText = "Hey, how's your posture?"
 const val kChecksNotificationChannel = "kanał sport"
 
 fun createNotificationChannel(context: Context) {
-    // TODO: set up channel better
     val name = "my notification channel"
     val descriptionText = "my freaking notification channel"
     val importance = NotificationManager.IMPORTANCE_DEFAULT
@@ -101,20 +109,27 @@ fun getCurrentPostureCheckId(context: Context, latestNotificationTimestamp: Int?
 
 suspend fun storeReplyAndCancelNotification(
     context: Context,
-    pastPostureCheck: PastPostureCheck
+    pastPostureCheck: PastPostureCheck,
+    showToast: Boolean = false
 ) {
     val plannedChecksRepo = PlannedChecksRepository(context)
     val pastChecksRepo = PastChecksRepository(context)
     val plannedCheck = pastPostureCheck.withoutReply()
-    pastChecksRepo.addPastCheck(pastPostureCheck)
-    plannedChecksRepo.deletePlannedCheck(plannedCheck)
+
+    // First cancel the notification.
     with(NotificationManagerCompat.from(context)) {
         cancel(pastPostureCheck.planned.id, pastPostureCheck.notificationId())
     }
+
+    // Now update the repository.
+    pastChecksRepo.addPastCheck(pastPostureCheck)
+    plannedChecksRepo.deletePlannedCheck(plannedCheck)
     LatestNotificationTimestampRepository(context).setLastNotificationTimestamp(
         (System.currentTimeMillis() / 1000).toInt()
     )
-    Toast.makeText(context, "Response saved!", Toast.LENGTH_SHORT).show()
+    if (showToast) {
+        Toast.makeText(context, "Response saved!", Toast.LENGTH_SHORT).show()
+    }
 }
 
 suspend fun dismissTestNotification(
@@ -126,4 +141,76 @@ suspend fun dismissTestNotification(
     LatestNotificationTimestampRepository(context).setLastNotificationTimestamp(
         (System.currentTimeMillis() / 1000).toInt()
     )
+}
+
+fun scheduleAlarm(context: Context, plannedPostureCheck: PlannedPostureCheck) {
+    val a: AlarmManager = context.getSystemService(Service.ALARM_SERVICE) as AlarmManager
+    Log.i("tomek", "building intent")
+    Log.i("tomek",
+        "RecomputeNextNotificationsService: plannedPostureCheck: $plannedPostureCheck"
+    )
+    val alarmIntent = Intent(context, NotificationAlarmBroadcastReceiver::class.java).let { intent ->
+        intent.putExtras(plannedPostureCheck.toBundle())
+        PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
+    }
+    a.setAndAllowWhileIdle(
+        AlarmManager.RTC_WAKEUP,
+        plannedPostureCheck.millis,
+        alarmIntent)
+}
+
+fun recomputeNotificationsForDay(
+    notificationsPerDay: Int,
+    day: Day,
+    minTime: TimeOfDay,
+    maxTime: TimeOfDay): HashSet<PlannedPostureCheck> {
+    val checks = HashSet<PlannedPostureCheck>()
+    val range = minTime.rangeTo(maxTime)
+    val cal = Calendar.getInstance()
+    cal.timeInMillis = day.toMillis()
+    for (i in 1..notificationsPerDay) {
+        // TODO: prevent duplicates or too close checks.
+        val timeOfDay = range[nextInt(0, range.size)]
+        cal.set(Calendar.HOUR_OF_DAY, timeOfDay.hour)
+        cal.set(Calendar.MINUTE, timeOfDay.minute)
+        val check = PlannedPostureCheck(millis = cal.timeInMillis)
+        checks.add(check)
+    }
+    return checks
+}
+
+suspend fun addAndScheduleCheck(context: Context, plannedPostureCheck: PlannedPostureCheck) {
+    PlannedChecksRepository(context).addPlannedCheck(plannedPostureCheck)
+    scheduleAlarm(context, plannedPostureCheck)
+}
+
+suspend fun scheduleCheckAtTime(context: Context, millis: Long) {
+    val newCheck = PlannedPostureCheck(millis)
+    addAndScheduleCheck(context, newCheck)
+}
+
+// Schedule checks at the first run of the app.
+suspend fun scheduleChecksFirstDay(
+    context: Context, notificationsPerDay: Int, minTime: TimeOfDay, maxTime: TimeOfDay) {
+    scheduleCheckAtTime(context, System.currentTimeMillis())
+    var notificationsToSchedule = max(0, notificationsPerDay - 1)
+    var minTime = minTime
+    val now = TimeOfDay.now()
+    if (now > minTime) {
+        minTime = now
+    }
+    if (minTime > maxTime) {
+        notificationsToSchedule = 0
+    }
+    val plannedChecks = recomputeNotificationsForDay(
+        notificationsToSchedule, Day.today(), minTime, maxTime
+    )
+    for (check in plannedChecks) {
+        addAndScheduleCheck(context, check)
+    }
+}
+
+// Admin-only!
+suspend fun scheduleRealCheckNSecondsFromNow(context: Context, nSeconds: Int) {
+    scheduleCheckAtTime(context, System.currentTimeMillis() + nSeconds * 1000)
 }

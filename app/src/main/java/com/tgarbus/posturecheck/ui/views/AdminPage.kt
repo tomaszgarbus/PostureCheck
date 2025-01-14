@@ -30,6 +30,7 @@ import com.tgarbus.posturecheck.data.AdminViewModel
 import com.tgarbus.posturecheck.data.PastChecksRepository
 import com.tgarbus.posturecheck.data.PlannedChecksRepository
 import com.tgarbus.posturecheck.data.generateFakePastChecks
+import com.tgarbus.posturecheck.scheduleRealCheckNSecondsFromNow
 import com.tgarbus.posturecheck.ui.reusables.PageHeader
 import kotlinx.coroutines.launch
 
@@ -139,6 +140,22 @@ fun AdminPage(
                 }
                 PageHeader("Onboarding")
                 Button(onClick = { navController.navigate("onboarding") }) { Text("Open onboarding") }
+                PageHeader("Schedule real notification in N seconds")
+                Text("The difference between real and test notification is that the real one is stored in history and counts to statistics.")
+                val nSeconds = remember { mutableIntStateOf(10) }
+                Slider(
+                    value = nSeconds.intValue.toFloat(),
+                    valueRange = 10f..120f,
+                    onValueChange = {
+                        nSeconds.intValue = it.toInt()
+                    })
+                Button(onClick = {
+                    coroutineScope.launch {
+                        scheduleRealCheckNSecondsFromNow(context, nSeconds.intValue)
+                    }
+                }) {
+                    Text("Schedule a check in ${nSeconds.intValue} seconds")
+                }
             }
         }
     }

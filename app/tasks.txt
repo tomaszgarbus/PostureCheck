@@ -2,13 +2,13 @@ Need:
 - Send first notifications already on the first day
 - Send first notification immediately after onboarding
 - Test the app on emulated wearos
-- Add in settings a button to allow notifications (go to settings to enable them)
 - Implement or delete the "temporarily disable notifications" button
-- Add "schedule notification 10s from now" option in Admin settings
-- Import/export progress file
 - Fallback to shorter period plot if it doesn't lose data, for example instead of all time show month if we only have data from one month.
-- On line chart show nicer labels
+- Scroll grid chart for all time to the right by default
+- Give better name o notification channel
 
 Want:
 - Show notification when new stats are available
 - Implement line chart for first > 0 entries (show times then)
+- Import/export progress file
+- Add in settings a button to allow notifications (go to settings to enable them)

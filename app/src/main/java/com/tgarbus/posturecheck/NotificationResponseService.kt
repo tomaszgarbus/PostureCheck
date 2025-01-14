@@ -1,17 +1,9 @@
 package com.tgarbus.posturecheck
 
-import android.app.NotificationManager
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.os.IBinder
-import android.util.Log
-import android.widget.Toast
-import androidx.compose.ui.platform.LocalContext
-import com.tgarbus.posturecheck.data.LatestNotificationTimestampRepository
-import com.tgarbus.posturecheck.data.PastChecksRepository
 import com.tgarbus.posturecheck.data.PastPostureCheck
-import com.tgarbus.posturecheck.data.PlannedChecksRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch

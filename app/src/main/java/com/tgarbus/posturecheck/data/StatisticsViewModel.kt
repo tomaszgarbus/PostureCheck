@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.Flow
 
 class StatisticsViewModel(): ViewModel() {
-    fun getPastPostureChecks(context: Context, days: Collection<Day>): Flow<Set<PastPostureCheck>> {
-        return PastChecksRepository(context).getChecksForDaysAsFlow(days)
+    fun getPostureChecksFromToday(context: Context): Flow<Set<PastPostureCheck>> {
+        return PastChecksRepository(context).getChecksForDaysAsFlow(listOf(Day.today()))
     }
 
     fun getPastPostureChecks(context: Context, periodType: PeriodType, includeToday: Boolean): Flow<Set<PastPostureCheck>> {

@@ -50,7 +50,7 @@ fun InAppNotification(plannedCheck: PlannedPostureCheck?) {
     val coroutineScope = rememberCoroutineScope()
     val onReply: suspend (PostureCheckReply) -> Unit = { reply ->
         if (plannedCheck != null) {
-            storeReplyAndCancelNotification(context, plannedCheck.withReply(reply))
+            storeReplyAndCancelNotification(context, plannedCheck.withReply(reply), true)
         } else {
             dismissTestNotification(context)
         }

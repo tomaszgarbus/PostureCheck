@@ -1,22 +1,19 @@
 package com.tgarbus.posturecheck
 
 import android.Manifest
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Bundle
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.tgarbus.posturecheck.data.PastPostureCheck
+import com.tgarbus.posturecheck.data.LatestNotificationTimestampRepository
 import com.tgarbus.posturecheck.data.PlannedPostureCheck
 import com.tgarbus.posturecheck.data.PostureCheckReply
-import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.runBlocking
 
 class NotificationAlarmBroadcastReceiver : BroadcastReceiver() {
 
@@ -36,6 +33,12 @@ class NotificationAlarmBroadcastReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
     val plannedPostureCheck = PlannedPostureCheck.fromBundle(intent.extras!!)
     Log.i("tomek", "NotificationAlarmBroadcastReceiver: PlannedPostureCheck: " + plannedPostureCheck.toString())
+
+    runBlocking {
+      LatestNotificationTimestampRepository(context).setLastNotificationTimestamp(
+        (System.currentTimeMillis() / 1000).toInt()
+      )
+    }
 
     val builder = NotificationCompat.Builder(context, kChecksNotificationChannel)
       .setSmallIcon(R.drawable.notification_icon)

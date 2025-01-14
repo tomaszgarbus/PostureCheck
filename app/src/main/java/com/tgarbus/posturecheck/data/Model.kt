@@ -2,6 +2,7 @@ package com.tgarbus.posturecheck.data
 
 import android.os.Bundle
 import android.util.Log
+import java.sql.Time
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.UUID
@@ -168,6 +169,10 @@ data class TimeOfDay(
 
     fun fromPreferencesStorageFormat(value: Int): TimeOfDay {
       return TimeOfDay(value / 100, value % 100)
+    }
+
+    fun now(): TimeOfDay {
+      return fromMillis(System.currentTimeMillis())
     }
   }
 }

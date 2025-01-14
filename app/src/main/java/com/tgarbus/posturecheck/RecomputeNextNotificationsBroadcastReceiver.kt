@@ -1,20 +1,15 @@
 package com.tgarbus.posturecheck
 
-import android.app.AlarmManager
-import android.app.PendingIntent
-import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import android.widget.Toast
 import com.tgarbus.posturecheck.data.Day
 import com.tgarbus.posturecheck.data.DefaultSettings
 import com.tgarbus.posturecheck.data.PlannedChecksRepository
 import com.tgarbus.posturecheck.data.PlannedPostureCheck
 import com.tgarbus.posturecheck.data.SettingsRepository
 import com.tgarbus.posturecheck.data.TimeOfDay
-import com.tgarbus.posturecheck.data.recomputeNotificationsForDay
 import com.tgarbus.posturecheck.data.validateNotificationsForDay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -23,14 +18,12 @@ import java.util.Calendar
 
 class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
     // TODO: handle different locale
-    // TOOD: recompute if user extended min and max time frame
     private fun recomputeNextNotifications(
         nextNotifications: Set<PlannedPostureCheck>,
         daysAhead: Int = 5,
         notificationsPerDay: Int = DefaultSettings.defaulNotificationsPerDay,
         minTime: TimeOfDay = DefaultSettings.defaultEarliestNotificationTime,
         maxTime: TimeOfDay = DefaultSettings.defaultLatestNotificationTime
-        // TODO: max time
     ): Set<PlannedPostureCheck> {
         val calendar: Calendar = Calendar.getInstance()
         calendar.timeInMillis = System.currentTimeMillis()
@@ -79,22 +72,6 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
         }
 
         return recomputedNotifications
-    }
-
-    private fun scheduleAlarm(context: Context, plannedPostureCheck: PlannedPostureCheck) {
-        val a: AlarmManager = context.getSystemService(Service.ALARM_SERVICE) as AlarmManager
-        Log.i("tomek", "building intent")
-        Log.i("tomek",
-            "RecomputeNextNotificationsService: plannedPostureCheck: $plannedPostureCheck"
-        )
-        val alarmIntent = Intent(context, NotificationAlarmBroadcastReceiver::class.java).let { intent ->
-            intent.putExtras(plannedPostureCheck.toBundle())
-            PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
-        }
-        a.setAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            plannedPostureCheck.millis,
-            alarmIntent)
     }
 
     private fun getEarliestFutureCheck(plannedChecks: Set<PlannedPostureCheck>): PlannedPostureCheck {

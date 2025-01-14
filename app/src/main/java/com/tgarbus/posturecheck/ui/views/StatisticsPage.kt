@@ -312,10 +312,11 @@ fun ChartBlock(
     pastChecks: Set<PastPostureCheck>,
     selectedPeriod: PeriodType,
     minTimeOfDay: TimeOfDay,
-    maxTimeOfDay: TimeOfDay
+    maxTimeOfDay: TimeOfDay,
+    includeToday: Boolean
 ) {
     if (activeChartType == ChartType.LINE) {
-        val chartEntries = buildLineChartEntriesForPeriod(selectedPeriod, pastChecks, false)
+        val chartEntries = buildLineChartEntriesForPeriod(selectedPeriod, pastChecks, includeToday)
         if (chartEntries != null) {
             LineChartDisplay(chartEntries)
         } else {
@@ -323,7 +324,7 @@ fun ChartBlock(
         }
     }
     if (activeChartType == ChartType.GRID) {
-        val chartColumns = buildGridChartColumnsForPeriod(pastChecks, selectedPeriod, false)
+        val chartColumns = buildGridChartColumnsForPeriod(pastChecks, selectedPeriod, includeToday)
         if (chartColumns != null) {
             GridChartDisplay(selectedPeriod, chartColumns, minTimeOfDay, maxTimeOfDay)
         } else {
@@ -376,9 +377,10 @@ fun StatisticsPage(
     val allTimeDropdownOption = DropdownOption(text = "All time", onSelect = {
         selectedPeriod.value = PeriodType.ALL_TIME
     })
-    // TODO: If there is any posture check today, set includeToday to true.
+    val checksFromToday = viewModel.getPostureChecksFromToday(LocalContext.current).collectAsState(HashSet())
+    val includeToday = checksFromToday.value.isNotEmpty()
     val pastChecks = viewModel.getPastPostureChecks(
-        LocalContext.current, selectedPeriod.value, includeToday = false).collectAsState(HashSet())
+        LocalContext.current, selectedPeriod.value, includeToday).collectAsState(HashSet())
     val answersDistribution = buildAnswersDistribution(
         pastChecks.value
     )
@@ -410,7 +412,7 @@ fun StatisticsPage(
             }
             ChartBlock(
                 activeChartType.value, pastChecks.value, selectedPeriod.value, minTimeOfDay.value,
-                maxTimeOfDay.value
+                maxTimeOfDay.value, includeToday
             )
         }
     }

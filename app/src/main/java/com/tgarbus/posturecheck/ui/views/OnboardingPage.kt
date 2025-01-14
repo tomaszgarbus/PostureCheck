@@ -39,7 +39,9 @@ import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tgarbus.posturecheck.R
+import com.tgarbus.posturecheck.data.DefaultSettings
 import com.tgarbus.posturecheck.data.OnboardingViewModel
+import com.tgarbus.posturecheck.scheduleChecksFirstDay
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.h2
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.h3
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.header
@@ -170,6 +172,7 @@ fun LetsGetStartedScreen(
     navController: NavController, viewModel: OnboardingViewModel = viewModel(),
     onGoBack: () -> Unit) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -182,6 +185,12 @@ fun LetsGetStartedScreen(
         )
         Image(painterResource(R.drawable.onboarding_lets_get_started), "Let's get started ")
         PrimaryButton("Take me to the app!") {
+            coroutineScope.launch {
+                scheduleChecksFirstDay(
+                    context, DefaultSettings.defaulNotificationsPerDay,
+                    DefaultSettings.defaultEarliestNotificationTime,
+                    DefaultSettings.defaultLatestNotificationTime)
+            }
             viewModel.markOnboardingCompleted(context)
             navController.navigate("main")
         }

@@ -1,6 +1,7 @@
 package com.tgarbus.posturecheck.data
 
 import android.util.Log
+import com.tgarbus.posturecheck.recomputeNotificationsForDay
 import java.util.Calendar
 import kotlin.random.Random.Default.nextBoolean
 import kotlin.random.Random.Default.nextInt
@@ -26,26 +27,6 @@ fun validateNotificationsForDay(
     // Validate max time.
     val latestTime = notifications.maxBy { it.getTimeOfDay() }.getTimeOfDay()
     return latestTime <= maxTime
-}
-
-fun recomputeNotificationsForDay(
-    notificationsPerDay: Int,
-    day: Day,
-    minTime: TimeOfDay,
-    maxTime: TimeOfDay): HashSet<PlannedPostureCheck> {
-    val checks = HashSet<PlannedPostureCheck>()
-    val range = minTime.rangeTo(maxTime)
-    val cal = Calendar.getInstance()
-    cal.timeInMillis = day.toMillis()
-    for (i in 1..notificationsPerDay) {
-        // TODO: prevent duplicates or too close checks.
-        val timeOfDay = range[nextInt(0, range.size)]
-        cal.set(Calendar.HOUR_OF_DAY, timeOfDay.hour)
-        cal.set(Calendar.MINUTE, timeOfDay.minute)
-        val check = PlannedPostureCheck(millis = cal.timeInMillis)
-        checks.add(check)
-    }
-    return checks
 }
 
 fun randomReply(): PostureCheckReply {
