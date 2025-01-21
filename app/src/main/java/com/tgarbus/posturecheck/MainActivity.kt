@@ -1,9 +1,7 @@
 package com.tgarbus.posturecheck
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
-import android.content.Intent.ACTION_USER_BACKGROUND
 import android.content.Intent.ACTION_USER_FOREGROUND
 import android.content.Intent.ACTION_USER_PRESENT
 import android.content.IntentFilter
@@ -12,10 +10,10 @@ import android.os.Build
 import android.os.Build.VERSION_CODES.TIRAMISU
 import android.os.Bundle
 import android.provider.Settings
+import android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,7 +28,7 @@ import androidx.navigation.compose.rememberNavController
 import com.tgarbus.posturecheck.data.OnboardingRepository
 import com.tgarbus.posturecheck.ui.views.AboutPage
 import com.tgarbus.posturecheck.ui.views.AdminPage
-import com.tgarbus.posturecheck.ui.views.InAppNotificationContainer
+import com.tgarbus.posturecheck.ui.views.InAppPostureCheckContainer
 import com.tgarbus.posturecheck.ui.views.NavigationFloat
 import com.tgarbus.posturecheck.ui.views.NavigationPage
 import com.tgarbus.posturecheck.ui.views.NotificationsPage
@@ -66,7 +64,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             val startingPoint = if (isIntroScreenCompleted) "main" else "onboarding"
-            InAppNotificationContainer {
+            InAppPostureCheckContainer {
                 NavHost(
                     navController = navController,
                     startDestination = startingPoint,
@@ -108,7 +106,17 @@ class MainActivity : ComponentActivity() {
                         NotificationsPage(navController)
                     }
                     composable("onboarding") {
-                        OnboardingPage(navController)
+                        OnboardingPage(
+                            navController,
+                            showNotificationAboutExactAlarm = (
+                                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                                ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.SCHEDULE_EXACT_ALARM) == PackageManager.PERMISSION_DENIED
+                            ),
+                            requestExactAlarmPermissions = {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                    startActivity(Intent(ACTION_REQUEST_SCHEDULE_EXACT_ALARM))
+                                }
+                            })
                     }
                 }
             }
@@ -121,6 +129,14 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        /* if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            when (ContextCompat.checkSelfPermission(this, Manifest.permission.SCHEDULE_EXACT_ALARM)) {
+                PackageManager.PERMISSION_GRANTED -> {}
+                PackageManager.PERMISSION_DENIED -> {
+                    startActivity(Intent(ACTION_REQUEST_SCHEDULE_EXACT_ALARM))
+                }
+            }
+        } */
         val intent = Intent(baseContext, RecomputeNextNotificationsBroadcastReceiver::class.java)
         sendBroadcast(intent)
     }

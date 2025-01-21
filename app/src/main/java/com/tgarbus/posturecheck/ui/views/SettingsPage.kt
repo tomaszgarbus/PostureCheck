@@ -57,14 +57,14 @@ fun SettingsPage(
             }
         }
 
-        SettingsItem("Temporarily disable notifications", inline = true) {
+        /* SettingsItem("Temporarily disable notifications", inline = true) {
             Switch(
                 checked = true, onCheckedChange = {},
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color.White,
                     checkedTrackColor = colorResource(R.color.mint),
                 ))
-        }
+        } */
 
         TimePickerSettingsItemWithDialog(
             "Earliest acceptable time to send notifications",

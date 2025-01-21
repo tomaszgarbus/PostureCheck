@@ -9,6 +9,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -23,7 +24,6 @@ import com.tgarbus.posturecheck.data.PlannedChecksRepository
 import com.tgarbus.posturecheck.data.PlannedPostureCheck
 import com.tgarbus.posturecheck.data.TimeOfDay
 import java.lang.Integer.max
-import java.sql.Time
 import java.util.Calendar
 import kotlin.random.Random.Default.nextInt
 
@@ -100,7 +100,6 @@ fun getCurrentPostureCheckId(context: Context, latestNotificationTimestamp: Int?
     with(NotificationManagerCompat.from(context)) {
         for (notification in activeNotifications) {
             val checkId = notification.tag
-            Log.d("tomek", "Getting current posture check: $latestNotificationTimestamp")
             return checkId
         }
     }
@@ -144,19 +143,23 @@ suspend fun dismissTestNotification(
 }
 
 fun scheduleAlarm(context: Context, plannedPostureCheck: PlannedPostureCheck) {
+    Log.d("tomek", "Scheduling alarm for $plannedPostureCheck")
     val a: AlarmManager = context.getSystemService(Service.ALARM_SERVICE) as AlarmManager
-    Log.i("tomek", "building intent")
-    Log.i("tomek",
-        "RecomputeNextNotificationsService: plannedPostureCheck: $plannedPostureCheck"
-    )
     val alarmIntent = Intent(context, NotificationAlarmBroadcastReceiver::class.java).let { intent ->
         intent.putExtras(plannedPostureCheck.toBundle())
         PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
     }
-    a.setAndAllowWhileIdle(
-        AlarmManager.RTC_WAKEUP,
-        plannedPostureCheck.millis,
-        alarmIntent)
+    val canScheduleExactAlarms = Build.VERSION.SDK_INT < Build.VERSION_CODES.S || a.canScheduleExactAlarms()
+    Log.d("tomek", "Can schedule exact alarms: $canScheduleExactAlarms")
+    if (canScheduleExactAlarms) {
+        a.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP, plannedPostureCheck.millis, alarmIntent)
+    } else {
+        a.setAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            plannedPostureCheck.millis,
+            alarmIntent)
+    }
 }
 
 fun recomputeNotificationsForDay(
@@ -184,7 +187,7 @@ suspend fun addAndScheduleCheck(context: Context, plannedPostureCheck: PlannedPo
     scheduleAlarm(context, plannedPostureCheck)
 }
 
-suspend fun scheduleCheckAtTime(context: Context, millis: Long) {
+suspend fun addAndScheduleCheckAtTime(context: Context, millis: Long) {
     val newCheck = PlannedPostureCheck(millis)
     addAndScheduleCheck(context, newCheck)
 }
@@ -192,7 +195,7 @@ suspend fun scheduleCheckAtTime(context: Context, millis: Long) {
 // Schedule checks at the first run of the app.
 suspend fun scheduleChecksFirstDay(
     context: Context, notificationsPerDay: Int, minTime: TimeOfDay, maxTime: TimeOfDay) {
-    scheduleCheckAtTime(context, System.currentTimeMillis())
+    addAndScheduleCheckAtTime(context, System.currentTimeMillis())
     var notificationsToSchedule = max(0, notificationsPerDay - 1)
     var minTime = minTime
     val now = TimeOfDay.now()
@@ -212,5 +215,5 @@ suspend fun scheduleChecksFirstDay(
 
 // Admin-only!
 suspend fun scheduleRealCheckNSecondsFromNow(context: Context, nSeconds: Int) {
-    scheduleCheckAtTime(context, System.currentTimeMillis() + nSeconds * 1000)
+    addAndScheduleCheckAtTime(context, System.currentTimeMillis() + nSeconds * 1000)
 }

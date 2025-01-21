@@ -1,6 +1,8 @@
 package com.tgarbus.posturecheck.ui.views
 
+import android.widget.HorizontalScrollView
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.scrollable

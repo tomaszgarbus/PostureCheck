@@ -34,7 +34,6 @@ class PlannedChecksRepository(private val context: Context) {
       for (id in allIds) {
         plannedChecks.add(getPlannedPostureCheckById(id, preferences)!!)
       }
-      Log.i("tomek", plannedChecks.toString())
       plannedChecks
     }
   }

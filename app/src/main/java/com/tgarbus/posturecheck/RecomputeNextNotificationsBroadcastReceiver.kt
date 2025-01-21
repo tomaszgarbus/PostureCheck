@@ -32,7 +32,6 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
         val sdf = SimpleDateFormat("dd-MM-yyyy")
         sdf.timeZone = calendar.getTimeZone()
 
-        Log.i("tomek", "Recomputing notifications: $nextNotifications")
         // First group notifications per day for the upcoming days.
         val groupedByDay = HashMap<String, HashSet<PlannedPostureCheck>>()
         for (plannedCheck in nextNotifications) {
@@ -42,7 +41,6 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
             }
             groupedByDay[dateStr]!!.add(plannedCheck)
         }
-        Log.i("tomek", groupedByDay.toString())
 
         // Recompute days which have wrong number of notifications or don't comply with
         // preferred times.

@@ -32,7 +32,6 @@ class NotificationAlarmBroadcastReceiver : BroadcastReceiver() {
 
   override fun onReceive(context: Context, intent: Intent) {
     val plannedPostureCheck = PlannedPostureCheck.fromBundle(intent.extras!!)
-    Log.i("tomek", "NotificationAlarmBroadcastReceiver: PlannedPostureCheck: " + plannedPostureCheck.toString())
 
     runBlocking {
       LatestNotificationTimestampRepository(context).setLastNotificationTimestamp(

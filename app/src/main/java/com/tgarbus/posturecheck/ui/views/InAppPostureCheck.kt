@@ -1,7 +1,5 @@
 package com.tgarbus.posturecheck.ui.views
 
-import android.app.NotificationManager
-import android.app.Service.NOTIFICATION_SERVICE
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,7 +22,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.modifier.modifierLocalMapOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -40,21 +37,26 @@ import com.tgarbus.posturecheck.dismissTestNotification
 import com.tgarbus.posturecheck.getCurrentPostureCheckId
 import com.tgarbus.posturecheck.storeReplyAndCancelNotification
 import com.tgarbus.posturecheck.ui.TextStyles
+import com.tgarbus.posturecheck.ui.TextStyles.Companion.h1
+import com.tgarbus.posturecheck.ui.TextStyles.Companion.h2
+import com.tgarbus.posturecheck.ui.TextStyles.Companion.h4
 import com.tgarbus.posturecheck.ui.reusables.SecondaryButton
 import kotlinx.coroutines.launch
 
+data class InAppNotificationButtonDescriptor(
+    val text: String,
+    val onClick: () -> Unit
+)
+
 @Composable
-fun InAppNotification(plannedCheck: PlannedPostureCheck?) {
+fun InAppNotification(
+    titleText: String,
+    subtitleText: String?,
+    leftButtonDescriptor: InAppNotificationButtonDescriptor?,
+    rightButtonDescriptor: InAppNotificationButtonDescriptor?,
+    tinyButtonDescriptor: InAppNotificationButtonDescriptor?,
+) {
     val interactionSource = remember { MutableInteractionSource() }
-    val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
-    val onReply: suspend (PostureCheckReply) -> Unit = { reply ->
-        if (plannedCheck != null) {
-            storeReplyAndCancelNotification(context, plannedCheck.withReply(reply), true)
-        } else {
-            dismissTestNotification(context)
-        }
-    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -80,36 +82,36 @@ fun InAppNotification(plannedCheck: PlannedPostureCheck?) {
                 verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically)
             ) {
                 Text(
-                    "Hey! How's your posture now?",
+                    titleText,
                     style = TextStyles.header.copy(Color.White),
                     textAlign = TextAlign.Center
                 )
+                if (subtitleText != null) {
+                    Text(
+                        subtitleText,
+                        style = h4.copy(Color.White),
+                        textAlign = TextAlign.Center)
+                }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly) {
-                    SecondaryButton("Good") {
-                        coroutineScope.launch {
-                            onReply(PostureCheckReply.GOOD)
-                        }
+                    if (leftButtonDescriptor != null) {
+                        SecondaryButton(leftButtonDescriptor.text) { leftButtonDescriptor.onClick() }
                     }
-                    SecondaryButton("Bad") {
-                        coroutineScope.launch {
-                            onReply(PostureCheckReply.BAD)
-                        }
+                    if (rightButtonDescriptor != null) {
+                        SecondaryButton(rightButtonDescriptor.text) { rightButtonDescriptor.onClick() }
                     }
                 }
-                Box(
-                    modifier = Modifier.clickable {
-                            coroutineScope.launch {
-                                onReply(PostureCheckReply.NOT_APPLICABLE)
-                            }
-                        }
-                        .padding(10.dp)
-                ) {
-                    Text(
-                        "Skip (N/A)",
-                        style = TextStyles.h4,
-                    )
+                if (tinyButtonDescriptor != null) {
+                    Box(
+                        modifier = Modifier.clickable { tinyButtonDescriptor.onClick() }
+                            .padding(10.dp)
+                    ) {
+                        Text(
+                            tinyButtonDescriptor.text,
+                            style = TextStyles.h4,
+                        )
+                    }
                 }
             }
         }
@@ -117,7 +119,48 @@ fun InAppNotification(plannedCheck: PlannedPostureCheck?) {
 }
 
 @Composable
-fun InAppNotificationContainer(content: @Composable () -> Unit) {
+fun InAppPostureCheck(plannedCheck: PlannedPostureCheck?) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val onReply: suspend (PostureCheckReply) -> Unit = { reply ->
+        if (plannedCheck != null) {
+            storeReplyAndCancelNotification(context, plannedCheck.withReply(reply), true)
+        } else {
+            dismissTestNotification(context)
+        }
+    }
+    InAppNotification(
+        titleText = "Hey! How's your posture now?",
+        subtitleText = null,
+        leftButtonDescriptor = InAppNotificationButtonDescriptor(
+            text = "Good",
+            onClick = {
+                coroutineScope.launch {
+                    onReply(PostureCheckReply.GOOD)
+                }
+            }
+        ),
+        rightButtonDescriptor = InAppNotificationButtonDescriptor(
+            text = "Bad",
+            onClick = {
+                coroutineScope.launch {
+                    onReply(PostureCheckReply.BAD)
+                }
+            }
+        ),
+        tinyButtonDescriptor = InAppNotificationButtonDescriptor(
+            text = "Skip (N/A)",
+            onClick = {
+                coroutineScope.launch {
+                    onReply(PostureCheckReply.NOT_APPLICABLE)
+                }
+            }
+        )
+    )
+}
+
+@Composable
+fun InAppPostureCheckContainer(content: @Composable () -> Unit) {
     val latestNotificationTimestamp = LatestNotificationTimestampRepository(
         LocalContext.current).getLastNotificationTimestampAsFlow().collectAsState(null)
     val plannedPostureChecks = PlannedChecksRepository(LocalContext.current).getPlannedChecksAsFlow().collectAsState(HashSet())
@@ -125,7 +168,7 @@ fun InAppNotificationContainer(content: @Composable () -> Unit) {
         val currentCheckId = getCurrentPostureCheckId(LocalContext.current, latestNotificationTimestamp.value)
         if (currentCheckId != null) {
             val plannedCheck = plannedPostureChecks.value.find { it.id == currentCheckId }
-            InAppNotification(plannedCheck)
+            InAppPostureCheck(plannedCheck)
         }
         content()
     }

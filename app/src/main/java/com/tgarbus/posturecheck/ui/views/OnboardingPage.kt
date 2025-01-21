@@ -1,5 +1,6 @@
 package com.tgarbus.posturecheck.ui.views
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -10,10 +11,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -22,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -35,6 +37,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -43,11 +46,9 @@ import com.tgarbus.posturecheck.data.DefaultSettings
 import com.tgarbus.posturecheck.data.OnboardingViewModel
 import com.tgarbus.posturecheck.scheduleChecksFirstDay
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.h2
-import com.tgarbus.posturecheck.ui.TextStyles.Companion.h3
 import com.tgarbus.posturecheck.ui.TextStyles.Companion.header
 import com.tgarbus.posturecheck.ui.reusables.PrimaryButton
 import com.tgarbus.posturecheck.ui.reusables.SecondaryButton
-import com.tgarbus.posturecheck.ui.reusables.SendTestNotificationButton
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -169,8 +170,10 @@ fun PagerController(numPages: Int, pagerState: PagerState, onScrollBeyondLastPag
 
 @Composable
 fun LetsGetStartedScreen(
-    navController: NavController, viewModel: OnboardingViewModel = viewModel(),
-    onGoBack: () -> Unit) {
+    navController: NavController,
+    isOnboardingCompleted: Boolean,
+    onGoBack: () -> Unit,
+    markOnboardingScreenCompleted: () -> Unit) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     Column(
@@ -185,26 +188,60 @@ fun LetsGetStartedScreen(
         )
         Image(painterResource(R.drawable.onboarding_lets_get_started), "Let's get started ")
         PrimaryButton("Take me to the app!") {
-            coroutineScope.launch {
-                scheduleChecksFirstDay(
-                    context, DefaultSettings.defaulNotificationsPerDay,
-                    DefaultSettings.defaultEarliestNotificationTime,
-                    DefaultSettings.defaultLatestNotificationTime)
+            if (!isOnboardingCompleted) {
+                coroutineScope.launch {
+                    scheduleChecksFirstDay(
+                        context, DefaultSettings.defaulNotificationsPerDay,
+                        DefaultSettings.defaultEarliestNotificationTime,
+                        DefaultSettings.defaultLatestNotificationTime
+                    )
+                }
             }
-            viewModel.markOnboardingCompleted(context)
+            markOnboardingScreenCompleted()
             navController.navigate("main")
         }
-        SendTestNotificationButton(context)
+        // SendTestNotificationButton(context)
         SecondaryButton("Go back") { onGoBack() }
     }
 }
 
 @Composable
-fun OnboardingPage(navController: NavController) {
+fun OnboardingPage(
+    navController: NavController,
+    requestExactAlarmPermissions: () -> Unit,
+    showNotificationAboutExactAlarm: Boolean,
+    viewModel: OnboardingViewModel = viewModel()) {
     val numPages = 5
     val pagerState = rememberPagerState { numPages }
     val showLetsGetStartedScreen = remember { mutableStateOf(false) }
     val animationScope = rememberCoroutineScope()
+    val isOnboardingCompleted = viewModel.isOnboardingCompleted(LocalContext.current).collectAsState(false)
+    val context = LocalContext.current
+    if (showLetsGetStartedScreen.value) {
+        val dismissedNotification = remember { mutableStateOf(false) }
+        if (showNotificationAboutExactAlarm && !dismissedNotification.value) {
+            Box(modifier = Modifier.fillMaxSize().zIndex(10f)) {
+                InAppNotification(
+                    titleText = "One last thing!",
+                    subtitleText = "You can optionally grant Posture Check the so-called alarm permissions. This will allow us to deliver your posture checks more reliably and on-time. Do you want to grant this permission?",
+                    leftButtonDescriptor = InAppNotificationButtonDescriptor(
+                        text = "Yes",
+                        onClick = {
+                            requestExactAlarmPermissions()
+                            dismissedNotification.value = true
+                        }
+                    ),
+                    rightButtonDescriptor = InAppNotificationButtonDescriptor(
+                        text = "No",
+                        onClick = {
+                            dismissedNotification.value = true
+                        }
+                    ),
+                    tinyButtonDescriptor = null
+                )
+            }
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -214,15 +251,19 @@ fun OnboardingPage(navController: NavController) {
         verticalArrangement = Arrangement.spacedBy(50.dp)
     ) {
         if (showLetsGetStartedScreen.value) {
-            LetsGetStartedScreen(navController, onGoBack = {
-                showLetsGetStartedScreen.value = false
-                animationScope.launch {
-                    pagerState.animateScrollToPage(0)
-                }
+            LetsGetStartedScreen(navController, isOnboardingCompleted = isOnboardingCompleted.value,
+                markOnboardingScreenCompleted = {
+                    viewModel.markOnboardingCompleted(context)
+                },
+                onGoBack = {
+                    showLetsGetStartedScreen.value = false
+                    animationScope.launch {
+                        pagerState.animateScrollToPage(0)
+                    }
             })
         }
         else {
-            Row(
+            /* Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -232,7 +273,8 @@ fun OnboardingPage(navController: NavController) {
                 }.padding(10.dp)) {
                     Text("Skip", style = h3.copy(color = Color.White))
                 }
-            }
+            } */
+            Spacer(modifier = Modifier.height(20.dp))
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier
