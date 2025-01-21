@@ -30,7 +30,7 @@ import kotlin.random.Random.Default.nextInt
 const val kTestNotificationId = -1
 const val kTestNotificationTag = "test"
 const val kNotificationText = "Hey, how's your posture?"
-const val kChecksNotificationChannel = "kanał sport"
+const val kChecksNotificationChannel = "Posture Checks"
 
 fun createNotificationChannel(context: Context) {
     val name = "my notification channel"
@@ -182,6 +182,10 @@ fun recomputeNotificationsForDay(
     return checks
 }
 
+suspend fun addCheck(context: Context, plannedPostureCheck: PlannedPostureCheck) {
+    PlannedChecksRepository(context).addPlannedCheck(plannedPostureCheck)
+}
+
 suspend fun addAndScheduleCheck(context: Context, plannedPostureCheck: PlannedPostureCheck) {
     PlannedChecksRepository(context).addPlannedCheck(plannedPostureCheck)
     scheduleAlarm(context, plannedPostureCheck)
@@ -194,7 +198,7 @@ suspend fun addAndScheduleCheckAtTime(context: Context, millis: Long) {
 
 // Schedule checks at the first run of the app.
 suspend fun scheduleChecksFirstDay(
-    context: Context, notificationsPerDay: Int, minTime: TimeOfDay, maxTime: TimeOfDay) {
+    context: Context, notificationsPerDay: Int, minTime: TimeOfDay, maxTime: TimeOfDay, triggerRecompute: () -> Unit) {
     addAndScheduleCheckAtTime(context, System.currentTimeMillis())
     var notificationsToSchedule = max(0, notificationsPerDay - 1)
     var minTime = minTime
@@ -209,8 +213,9 @@ suspend fun scheduleChecksFirstDay(
         notificationsToSchedule, Day.today(), minTime, maxTime
     )
     for (check in plannedChecks) {
-        addAndScheduleCheck(context, check)
+        addCheck(context, check)
     }
+    // triggerRecompute()
 }
 
 // Admin-only!

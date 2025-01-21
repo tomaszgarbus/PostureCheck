@@ -22,9 +22,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
+import androidx.navigation.NamedNavArgument
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.tgarbus.posturecheck.data.OnboardingRepository
 import com.tgarbus.posturecheck.ui.views.AboutPage
 import com.tgarbus.posturecheck.ui.views.AdminPage
@@ -59,11 +62,11 @@ class MainActivity : ComponentActivity() {
         filter.addAction(ACTION_USER_PRESENT)
         filter.addAction(ACTION_USER_FOREGROUND)
         ContextCompat.registerReceiver(baseContext, RecomputeNextNotificationsBroadcastReceiver(),
-            filter, if (Build.VERSION.SDK_INT >= TIRAMISU) ContextCompat.RECEIVER_EXPORTED else 0)
+            filter, ContextCompat.RECEIVER_EXPORTED)
 
         setContent {
             val navController = rememberNavController()
-            val startingPoint = if (isIntroScreenCompleted) "main" else "onboarding"
+            val startingPoint = if (isIntroScreenCompleted) "main/STATISTICS" else "onboarding"
             InAppPostureCheckContainer {
                 NavHost(
                     navController = navController,
@@ -72,8 +75,13 @@ class MainActivity : ComponentActivity() {
                     exitTransition = { ExitTransition.None },
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    composable("main") {
-                        val currentPage = remember { mutableStateOf(NavigationPage.STATISTICS) }
+                    composable("main/{currentPage}", arguments = listOf(
+                        navArgument(name = "currentPage") {
+                            type = NavType.StringType
+                            defaultValue = NavigationPage.STATISTICS.toString()
+                        }
+                    )) { backStackEntry ->
+                        val currentPage = remember { mutableStateOf(NavigationPage.valueOf(backStackEntry.arguments!!.getString("currentPage")!!)) }
                         when (currentPage.value) {
                             NavigationPage.ADMIN -> AdminPage(navController)
                             NavigationPage.STATISTICS -> StatisticsPage(navController)
@@ -116,6 +124,13 @@ class MainActivity : ComponentActivity() {
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                                     startActivity(Intent(ACTION_REQUEST_SCHEDULE_EXACT_ALARM))
                                 }
+                            },
+                            triggerRecompute = {
+                                val intent = Intent(
+                                    baseContext,
+                                    RecomputeNextNotificationsBroadcastReceiver::class.java
+                                )
+                                sendBroadcast(intent)
                             })
                     }
                 }

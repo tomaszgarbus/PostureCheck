@@ -173,7 +173,8 @@ fun LetsGetStartedScreen(
     navController: NavController,
     isOnboardingCompleted: Boolean,
     onGoBack: () -> Unit,
-    markOnboardingScreenCompleted: () -> Unit) {
+    markOnboardingScreenCompleted: () -> Unit,
+    triggerRecompute: () -> Unit) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     Column(
@@ -193,12 +194,13 @@ fun LetsGetStartedScreen(
                     scheduleChecksFirstDay(
                         context, DefaultSettings.defaulNotificationsPerDay,
                         DefaultSettings.defaultEarliestNotificationTime,
-                        DefaultSettings.defaultLatestNotificationTime
+                        DefaultSettings.defaultLatestNotificationTime,
+                        triggerRecompute,
                     )
                 }
             }
             markOnboardingScreenCompleted()
-            navController.navigate("main")
+            navController.navigate("main/SETTINGS")
         }
         // SendTestNotificationButton(context)
         SecondaryButton("Go back") { onGoBack() }
@@ -209,6 +211,7 @@ fun LetsGetStartedScreen(
 fun OnboardingPage(
     navController: NavController,
     requestExactAlarmPermissions: () -> Unit,
+    triggerRecompute: () -> Unit,
     showNotificationAboutExactAlarm: Boolean,
     viewModel: OnboardingViewModel = viewModel()) {
     val numPages = 5
@@ -260,7 +263,9 @@ fun OnboardingPage(
                     animationScope.launch {
                         pagerState.animateScrollToPage(0)
                     }
-            })
+                },
+                triggerRecompute = triggerRecompute,
+            )
         }
         else {
             /* Row(

@@ -113,7 +113,6 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
                 }
             }
         }
-        // TODO: Clean up checks in the past from the repo.
 
         // Second pick the earliest upcoming check.
         val plannedPostureCheck = getEarliestFutureCheck(newPlannedChecks)
