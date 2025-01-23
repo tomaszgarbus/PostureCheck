@@ -19,7 +19,7 @@ import com.tgarbus.posturecheck.R
 
 @Composable
 fun ScrollableFullScreenColumn(
-    headerHeight: Dp = 0.dp,
+    topSpace: Dp = 30.dp,
     modifier: Modifier = Modifier,
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     content: @Composable () -> Unit
@@ -29,7 +29,7 @@ fun ScrollableFullScreenColumn(
             .fillMaxSize()
             .background(colorResource(R.color.light_mint))
     ) {
-        Column(modifier = Modifier.height(headerHeight)) {  }
+        Column(modifier = Modifier.height(topSpace)) {  }
         val scrollState = rememberScrollState()
         Column(
             modifier = Modifier

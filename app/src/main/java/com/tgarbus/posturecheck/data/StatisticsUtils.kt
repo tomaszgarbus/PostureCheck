@@ -187,6 +187,9 @@ fun buildLineChartEntriesForAllTime(
         dayFrom += daysPerEntry
         prevAggregate = distribution
     }
+    if (result.size < 2) {
+        return null
+    }
     return result
 }
 

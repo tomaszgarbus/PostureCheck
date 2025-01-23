@@ -9,7 +9,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SendTestNotificationButton(context: Context) {
     val coroutineScope = rememberCoroutineScope()
-    SecondaryButton("Send test notification") {
+    PrimaryButton("Send test notification") {
         coroutineScope.launch {
             sendTestNotification(context)
         }

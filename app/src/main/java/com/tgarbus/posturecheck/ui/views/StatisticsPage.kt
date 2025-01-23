@@ -1,11 +1,8 @@
 package com.tgarbus.posturecheck.ui.views
 
-import android.widget.HorizontalScrollView
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -393,7 +390,7 @@ fun StatisticsPage(
     val maxTimeOfDay = viewModel.getMaxTimeOfDay(LocalContext.current).collectAsState(
         DefaultSettings.defaultLatestNotificationTime)
     ScrollableFullScreenColumn(
-        headerHeight = 86.dp,
+        topSpace = 106.dp,
         verticalArrangement = Arrangement.spacedBy(20.dp)) {
         if (showOnlyBePatientBanner) {
             BePatientBlock()
@@ -421,7 +418,7 @@ fun StatisticsPage(
     Box(modifier = Modifier
         .fillMaxSize()
         .safeDrawingPadding()
-        .padding(horizontal = 20.dp)
+        .padding(horizontal = 20.dp, vertical = 20.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),

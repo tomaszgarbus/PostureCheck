@@ -24,7 +24,8 @@ fun CircularGraph(
     // val textMeasurer = rememberTextMeasurer()
     val bufferAngle = 20f
     val strokeWidth = 50f
-    val circleMinusBuffers = 360f - bufferAngle * entries.size
+    val filteredEntries = entries.filter { it.percentage > 0 }
+    val circleMinusBuffers = 360f - bufferAngle * filteredEntries.size
     Canvas(
         modifier = canvasModifier
     ) {
@@ -33,7 +34,7 @@ fun CircularGraph(
             size.width / 2 - radius,
             size.height / 2 - radius) {
             var sumAngles = startingAngle
-            for (entry in entries) {
+            for (entry in filteredEntries) {
                 val sweepAngle = circleMinusBuffers * (entry.percentage / 100f)
                 drawArc(
                     startAngle = sumAngles,

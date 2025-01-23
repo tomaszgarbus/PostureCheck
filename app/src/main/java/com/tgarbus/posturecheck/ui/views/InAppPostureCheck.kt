@@ -57,6 +57,9 @@ fun InAppNotification(
     tinyButtonDescriptor: InAppNotificationButtonDescriptor?,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    val invisibleTexts = ArrayList<String>()
+    leftButtonDescriptor?.let { invisibleTexts.add(it.text) }
+    rightButtonDescriptor?.let { invisibleTexts.add(it.text) }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -96,10 +99,10 @@ fun InAppNotification(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly) {
                     if (leftButtonDescriptor != null) {
-                        SecondaryButton(leftButtonDescriptor.text) { leftButtonDescriptor.onClick() }
+                        SecondaryButton(leftButtonDescriptor.text, invisibleTexts = invisibleTexts) { leftButtonDescriptor.onClick() }
                     }
                     if (rightButtonDescriptor != null) {
-                        SecondaryButton(rightButtonDescriptor.text) { rightButtonDescriptor.onClick() }
+                        SecondaryButton(rightButtonDescriptor.text, invisibleTexts = invisibleTexts) { rightButtonDescriptor.onClick() }
                     }
                 }
                 if (tinyButtonDescriptor != null) {

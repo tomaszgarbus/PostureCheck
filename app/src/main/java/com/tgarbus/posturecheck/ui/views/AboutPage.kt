@@ -6,9 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -61,7 +59,8 @@ fun descriptionText(page: Int): String {
 
 @Composable
 fun AboutCard(number: Int, header: String, description: String, painter: Painter, active: Boolean = false) {
-    val modifier = if (active) Modifier.shadow(10.dp, RoundedCornerShape(24.dp)) else Modifier
+    // val modifier = if (active) Modifier.shadow(10.dp, RoundedCornerShape(24.dp)) else Modifier
+    val modifier = Modifier
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(24.dp))
@@ -74,7 +73,7 @@ fun AboutCard(number: Int, header: String, description: String, painter: Painter
         Image(painter, header)
         Text(
             "${number + 1}",
-            style = aboutPageNumber
+            style = aboutPageNumber.copy(colorResource(R.color.dark_green))
         )
         Text(
             header,

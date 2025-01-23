@@ -2,6 +2,7 @@ package com.tgarbus.posturecheck.ui.views
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
@@ -21,6 +23,8 @@ import androidx.navigation.NavController
 import com.tgarbus.posturecheck.R
 import com.tgarbus.posturecheck.data.DefaultSettings
 import com.tgarbus.posturecheck.data.SettingsViewModel
+import com.tgarbus.posturecheck.ui.TextStyles.Companion.h3
+import com.tgarbus.posturecheck.ui.reusables.InlineClickableSettingsItem
 import com.tgarbus.posturecheck.ui.reusables.NumberPicker
 import com.tgarbus.posturecheck.ui.reusables.PageHeader
 import com.tgarbus.posturecheck.ui.reusables.PrimaryButton
@@ -67,7 +71,7 @@ fun SettingsPage(
         } */
 
         TimePickerSettingsItemWithDialog(
-            "Earliest acceptable time to send notifications",
+            "Earliest notification time",
             earliestNotificationTime.value) { timeOfDay ->
             if (timeOfDay >= latestNotificationTime.value) {
                 Toast.makeText(context, "Earliest allowed notification time must be earlier the latest allowed time.", Toast.LENGTH_SHORT).show()
@@ -93,20 +97,26 @@ fun SettingsPage(
             }
         }
 
+        Spacer(modifier = Modifier
+            .fillMaxWidth()
+            .height(0.5.dp)
+            .background(colorResource(R.color.spacer_grey)))
+
+        InlineClickableSettingsItem("Show introduction again") {
+            navController.navigate("onboarding")
+        }
+
+        Spacer(modifier = Modifier
+            .fillMaxWidth()
+            .height(0.5.dp)
+            .background(colorResource(R.color.spacer_grey)))
+
+        InlineClickableSettingsItem("System settings for notifications") {
+            openNotificationSettings()
+        }
+
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
             SendTestNotificationButton(context)
-        }
-
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-            PrimaryButton("Show introduction again") {
-                navController.navigate("onboarding")
-            }
-        }
-
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-            SecondaryButton("System settings for notifications") {
-                openNotificationSettings()
-            }
         }
 
     }

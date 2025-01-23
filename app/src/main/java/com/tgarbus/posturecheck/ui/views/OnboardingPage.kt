@@ -1,6 +1,11 @@
 package com.tgarbus.posturecheck.ui.views
 
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -42,6 +47,7 @@ import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tgarbus.posturecheck.R
+import com.tgarbus.posturecheck.data.BuildConfig
 import com.tgarbus.posturecheck.data.DefaultSettings
 import com.tgarbus.posturecheck.data.OnboardingViewModel
 import com.tgarbus.posturecheck.scheduleChecksFirstDay
@@ -105,10 +111,10 @@ fun OnboardingSlide(pageNumber: Int) {
 }
 
 @Composable
-fun PagerController(numPages: Int, pagerState: PagerState, onScrollBeyondLastPage: () -> Unit) {
+fun PagerController(numPages: Int, pagerState: PagerState) {
     val animationScope = rememberCoroutineScope()
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 25.dp),
+        modifier = Modifier.fillMaxWidth().height(75.dp).padding(horizontal = 25.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -132,37 +138,38 @@ fun PagerController(numPages: Int, pagerState: PagerState, onScrollBeyondLastPag
                 }
             }
         }
-        Box(
-            modifier = Modifier.size(75.dp),
-            contentAlignment = Alignment.Center
+        AnimatedVisibility(pagerState.currentPage + 1 < numPages,
+            enter = fadeIn(),
+            exit = fadeOut()
         ) {
-            val progress = (pagerState.currentPage + pagerState.currentPageOffsetFraction) / (numPages - 1)
-            CircularProgressIndicator(
-                modifier = Modifier.fillMaxSize(),
-                progress = progress,
-                color = Color.White
-            )
             Box(
-                modifier = Modifier
-                    .size(50.dp)
-                    .clip(CircleShape)
-                    .background(colorResource(R.color.dark_green))
-                    .align(Alignment.Center)
-                    .clickable {
-                        if (pagerState.currentPage + 1 < numPages) {
+                modifier = Modifier.size(75.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                val progress = (pagerState.currentPage + pagerState.currentPageOffsetFraction) / (numPages - 1)
+                CircularProgressIndicator(
+                    modifier = Modifier.fillMaxSize(),
+                    progress = progress,
+                    color = Color.White
+                )
+                Box(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clip(CircleShape)
+                        .background(colorResource(R.color.dark_green))
+                        .align(Alignment.Center)
+                        .clickable {
                             animationScope.launch {
                                 pagerState.animateScrollToPage(pagerState.currentPage + 1)
                             }
-                        } else {
-                            onScrollBeyondLastPage()
-                        }
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painterResource(R.drawable.onboarding_forward), "Next page",
-                    modifier = Modifier.align(Alignment.Center),
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painterResource(R.drawable.onboarding_forward), "Next page",
+                        modifier = Modifier.align(Alignment.Center),
                     )
+                }
             }
         }
     }
@@ -172,7 +179,6 @@ fun PagerController(numPages: Int, pagerState: PagerState, onScrollBeyondLastPag
 fun LetsGetStartedScreen(
     navController: NavController,
     isOnboardingCompleted: Boolean,
-    onGoBack: () -> Unit,
     markOnboardingScreenCompleted: () -> Unit,
     triggerRecompute: () -> Unit) {
     val context = LocalContext.current
@@ -203,7 +209,7 @@ fun LetsGetStartedScreen(
             navController.navigate("main/SETTINGS")
         }
         // SendTestNotificationButton(context)
-        SecondaryButton("Go back") { onGoBack() }
+        // SecondaryButton("Go back") { onGoBack() }
     }
 }
 
@@ -214,13 +220,12 @@ fun OnboardingPage(
     triggerRecompute: () -> Unit,
     showNotificationAboutExactAlarm: Boolean,
     viewModel: OnboardingViewModel = viewModel()) {
-    val numPages = 5
+    val numPages = 6
     val pagerState = rememberPagerState { numPages }
-    val showLetsGetStartedScreen = remember { mutableStateOf(false) }
     val animationScope = rememberCoroutineScope()
     val isOnboardingCompleted = viewModel.isOnboardingCompleted(LocalContext.current).collectAsState(false)
     val context = LocalContext.current
-    if (showLetsGetStartedScreen.value) {
+    if (pagerState.currentPage == 5 && BuildConfig.askForAlarmPermissions) {
         val dismissedNotification = remember { mutableStateOf(false) }
         if (showNotificationAboutExactAlarm && !dismissedNotification.value) {
             Box(modifier = Modifier.fillMaxSize().zIndex(10f)) {
@@ -251,53 +256,41 @@ fun OnboardingPage(
             .background(colorResource(R.color.mint))
             .safeDrawingPadding()
             .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(50.dp)
+        verticalArrangement = Arrangement.spacedBy(50.dp, alignment = Alignment.CenterVertically)
     ) {
-        if (showLetsGetStartedScreen.value) {
-            LetsGetStartedScreen(navController, isOnboardingCompleted = isOnboardingCompleted.value,
-                markOnboardingScreenCompleted = {
-                    viewModel.markOnboardingCompleted(context)
-                },
-                onGoBack = {
-                    showLetsGetStartedScreen.value = false
-                    animationScope.launch {
-                        pagerState.animateScrollToPage(0)
-                    }
-                },
-                triggerRecompute = triggerRecompute,
-            )
-        }
-        else {
-            /* Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Spacer(modifier = Modifier.size(1.dp))
-                Box(modifier = Modifier.wrapContentSize().clickable {
-                    navController.navigate("main")
-                }.padding(10.dp)) {
-                    Text("Skip", style = h3.copy(color = Color.White))
-                }
-            } */
-            Spacer(modifier = Modifier.height(20.dp))
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier
-                    .weight(1f),
-                // .background(Color.Yellow),
-                verticalAlignment = Alignment.Top
-            ) { page ->
-                when (page) {
-                    0 -> WelcomePage()
-                    1 -> OnboardingSlide(1)
-                    2 -> OnboardingSlide(2)
-                    3 -> OnboardingSlide(3)
-                    4 -> OnboardingSlide(4)
-                }
+        /* Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Spacer(modifier = Modifier.size(1.dp))
+            Box(modifier = Modifier.wrapContentSize().clickable {
+                navController.navigate("main")
+            }.padding(10.dp)) {
+                Text("Skip", style = h3.copy(color = Color.White))
             }
-            PagerController(numPages, pagerState) {
-                showLetsGetStartedScreen.value = true
+        } */
+        Spacer(modifier = Modifier.height(20.dp))
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .weight(1f),
+            // .background(Color.Yellow),
+            verticalAlignment = Alignment.CenterVertically
+        ) { page ->
+            when (page) {
+                0 -> WelcomePage()
+                1 -> OnboardingSlide(1)
+                2 -> OnboardingSlide(2)
+                3 -> OnboardingSlide(3)
+                4 -> OnboardingSlide(4)
+                5 -> LetsGetStartedScreen(navController, isOnboardingCompleted = isOnboardingCompleted.value,
+                    markOnboardingScreenCompleted = {
+                        viewModel.markOnboardingCompleted(context)
+                    },
+                    triggerRecompute = triggerRecompute,
+                )
             }
         }
+        PagerController(numPages, pagerState)
     }
 }

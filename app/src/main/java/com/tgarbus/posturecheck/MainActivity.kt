@@ -81,8 +81,8 @@ class MainActivity : ComponentActivity() {
                             defaultValue = NavigationPage.STATISTICS.toString()
                         }
                     )) { backStackEntry ->
-                        val currentPage = remember { mutableStateOf(NavigationPage.valueOf(backStackEntry.arguments!!.getString("currentPage")!!)) }
-                        when (currentPage.value) {
+                        val currentPage = NavigationPage.valueOf(backStackEntry.arguments!!.getString("currentPage")!!)
+                        when (currentPage) {
                             NavigationPage.ADMIN -> AdminPage(navController)
                             NavigationPage.STATISTICS -> StatisticsPage(navController)
                             NavigationPage.ABOUT -> AboutPage()
@@ -105,9 +105,9 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         NavigationFloat(
-                            currentPage = currentPage.value,
+                            currentPage = currentPage,
                             onPageChanged = {
-                                currentPage.value = it
+                                navController.navigate("main/$it")
                             })
                     }
                     composable("notifications") {

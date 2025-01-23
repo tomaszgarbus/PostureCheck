@@ -81,6 +81,7 @@ fun DropdownMenu(
                                 .clickable {
                                     selected.value = option
                                     option.onSelect()
+                                    isExpanded.value = false
                                 }
                                 .padding(10.dp)
                         ) {

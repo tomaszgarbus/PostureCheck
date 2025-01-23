@@ -80,7 +80,7 @@ fun NotificationsPage(navController: NavController, viewModel: NotificationsView
             .fillMaxSize()
             .background(colorResource(R.color.light_mint))
             .safeDrawingPadding()
-            .padding(horizontal = 20.dp)
+            .padding(horizontal = 20.dp, vertical = 20.dp)
     ) {
         Row(
             modifier = Modifier.padding(bottom = 10.dp),
