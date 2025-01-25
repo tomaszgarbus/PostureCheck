@@ -33,8 +33,8 @@ const val kNotificationText = "Hey, how's your posture?"
 const val kChecksNotificationChannel = "Posture Checks"
 
 fun createNotificationChannel(context: Context) {
-    val name = "my notification channel"
-    val descriptionText = "my freaking notification channel"
+    val name = kChecksNotificationChannel
+    val descriptionText = kChecksNotificationChannel
     val importance = NotificationManager.IMPORTANCE_DEFAULT
     val channel = NotificationChannel(kChecksNotificationChannel, name, importance).apply {
         description = descriptionText
@@ -70,7 +70,7 @@ suspend fun sendTestNotification(context: Context) {
             buildPendingIntentForDismissal(context))
         .addAction(R.drawable.ic_launcher_foreground, "N/A",
             buildPendingIntentForDismissal(context))
-    builder.setOngoing(true)
+    //builder.setOngoing(true)
     with(NotificationManagerCompat.from(context)) {
         if (ActivityCompat.checkSelfPermission(
                 context,

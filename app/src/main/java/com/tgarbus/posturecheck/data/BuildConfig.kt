@@ -2,7 +2,7 @@ package com.tgarbus.posturecheck.data
 
 class BuildConfig {
     companion object {
-        val isAdmin = true
+        val isAdmin = false
         val askForAlarmPermissions = false
     }
 }
