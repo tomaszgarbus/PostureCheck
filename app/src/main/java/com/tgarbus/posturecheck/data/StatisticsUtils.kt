@@ -199,8 +199,11 @@ fun buildLineChartEntriesForPeriod(
     includeToday: Boolean
 ): ArrayList<LineChartEntry>? {
     return when (period) {
-        PeriodType.WEEK -> buildLastWeekLineChartEntries(checks, includeToday)
-        PeriodType.MONTH -> buildLastMonthLineChartEntries(checks, includeToday)
+        PeriodType.WEEK -> buildLastWeekLineChartEntries(checks, includeToday) ?:
+            buildLastMonthLineChartEntries(checks, includeToday) ?:
+            buildLineChartEntriesForAllTime(checks, includeToday)
+        PeriodType.MONTH -> buildLastMonthLineChartEntries(checks, includeToday) ?:
+            buildLineChartEntriesForAllTime(checks, includeToday)
         PeriodType.ALL_TIME -> buildLineChartEntriesForAllTime(checks, includeToday)
     }
 }
@@ -342,8 +345,11 @@ fun buildGridChartColumnsForPeriod(
     period: PeriodType, includeToday: Boolean
 ): ArrayList<GridChartColumnInput>? {
     return when (period) {
-        PeriodType.WEEK -> buildWeekGridChartColumns(checks, includeToday)
-        PeriodType.MONTH -> buildMonthGridChartColumns(checks, includeToday)
+        PeriodType.WEEK -> buildWeekGridChartColumns(checks, includeToday) ?:
+            buildMonthGridChartColumns(checks, includeToday) ?:
+            buildAllTimeGridChartColumns(checks, includeToday)
+        PeriodType.MONTH -> buildMonthGridChartColumns(checks, includeToday) ?:
+            buildAllTimeGridChartColumns(checks, includeToday)
         PeriodType.ALL_TIME -> buildAllTimeGridChartColumns(checks, includeToday)
     }
 }
