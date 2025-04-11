@@ -25,6 +25,7 @@ import com.tgarbus.posturecheck.data.PlannedPostureCheck
 import com.tgarbus.posturecheck.data.TimeOfDay
 import java.lang.Integer.max
 import java.util.Calendar
+import kotlin.math.abs
 import kotlin.random.Random.Default.nextInt
 
 const val kTestNotificationId = -1
@@ -68,7 +69,7 @@ suspend fun sendTestNotification(context: Context) {
             buildPendingIntentForDismissal(context))
         .addAction(R.drawable.ic_launcher_foreground, "Bad",
             buildPendingIntentForDismissal(context))
-        .addAction(R.drawable.ic_launcher_foreground, "N/A",
+        .addAction(R.drawable.ic_launcher_foreground, "Skip",
             buildPendingIntentForDismissal(context))
     //builder.setOngoing(true)
     with(NotificationManagerCompat.from(context)) {
@@ -162,21 +163,40 @@ fun scheduleAlarm(context: Context, plannedPostureCheck: PlannedPostureCheck) {
     }
 }
 
+fun randomCheck(cal: Calendar, range: Array<TimeOfDay>): PlannedPostureCheck {
+    val timeOfDay = range[nextInt(0, range.size)]
+    cal.set(Calendar.HOUR_OF_DAY, timeOfDay.hour)
+    cal.set(Calendar.MINUTE, timeOfDay.minute)
+    return PlannedPostureCheck(millis = cal.timeInMillis)
+}
+
 fun recomputeNotificationsForDay(
     notificationsPerDay: Int,
     day: Day,
     minTime: TimeOfDay,
-    maxTime: TimeOfDay): HashSet<PlannedPostureCheck> {
+    maxTime: TimeOfDay,
+    minMinutesBetweenNotifications: Int = 40,
+    retriesPerNotification: Int = 10): HashSet<PlannedPostureCheck> {
+    // It may not be possible to satisfy all the constraints, in particular if
+    // notificationsPerDay * minMinutesBetweenNotifications > maxTime - minTime.
+    // Therefore we'll just try retriesPerNotification times. minTime and maxTime are
+    // non-negotiable, whereas minMinutesBetweenNotifications is best effort.
     val checks = HashSet<PlannedPostureCheck>()
     val range = minTime.rangeTo(maxTime)
     val cal = Calendar.getInstance()
     cal.timeInMillis = day.toMillis()
     for (i in 1..notificationsPerDay) {
         // TODO: prevent duplicates or too close checks.
-        val timeOfDay = range[nextInt(0, range.size)]
-        cal.set(Calendar.HOUR_OF_DAY, timeOfDay.hour)
-        cal.set(Calendar.MINUTE, timeOfDay.minute)
-        val check = PlannedPostureCheck(millis = cal.timeInMillis)
+        var check = randomCheck(cal, range)
+        for (j in 1..retriesPerNotification) {
+            val satisfiesConstraints = checks.none {
+                abs(
+                    check.getTimeOfDay().minutesTo(it.getTimeOfDay())
+                ) < minMinutesBetweenNotifications
+            }
+            if (satisfiesConstraints) break
+            check = randomCheck(cal, range)
+        }
         checks.add(check)
     }
     return checks

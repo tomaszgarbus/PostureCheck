@@ -81,7 +81,7 @@ fun PostureCheckReply.toDisplayableString(): String {
     PostureCheckReply.NO_ANSWER -> "No answer"
     PostureCheckReply.BAD -> "Bad posture"
     PostureCheckReply.GOOD -> "Good posture"
-    PostureCheckReply.NOT_APPLICABLE -> "N/A"
+    PostureCheckReply.NOT_APPLICABLE -> "Skipped"
   }
 }
 
@@ -127,6 +127,11 @@ data class TimeOfDay(
 ): Comparable<TimeOfDay> {
   override fun compareTo(other: TimeOfDay): Int {
     return compareValuesBy(this, other, { it.hour }, { it.minute })
+  }
+
+  // Returns negative value if `other` is earlier.
+  fun minutesTo(other: TimeOfDay): Int {
+    return (other.hour - hour) * 60 + other.minute - minute
   }
 
   private fun nextMinute(): TimeOfDay {

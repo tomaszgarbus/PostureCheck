@@ -2,6 +2,7 @@ package com.tgarbus.posturecheck.ui.views
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -140,9 +141,9 @@ fun Summary(answersDistribution: AnswersDistribution) {
                 canvasModifier = Modifier.fillMaxSize(),
                 entries = listOf(
                     CircularGraphComponent(
-                        answersDistribution.percentGood(), colorResource(R.color.accent_yellow)),
+                        answersDistribution.percentGood(), colorResource(R.color.dark_green)),
                     CircularGraphComponent(
-                        answersDistribution.percentBad(), colorResource(R.color.dark_green)),
+                        answersDistribution.percentBad(), colorResource(R.color.accent_yellow)),
                     CircularGraphComponent(
                         answersDistribution.percentNoAnswer(), colorResource(R.color.light_mint)),
                 ))
@@ -169,12 +170,13 @@ fun Summary(answersDistribution: AnswersDistribution) {
 
 @Composable
 fun GridChartLegendEntry(
-    color: Color, text: String
+    color: Color, text: String, fill: Boolean = true
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Box(modifier = Modifier.clip(CircleShape).size(28.dp).background(color)) {}
+        Box(modifier = Modifier.clip(CircleShape).size(28.dp).let {
+            if (fill) it.background(color) else it.border(3.dp, color, CircleShape) }) {}
         Text(text, style = h4.copy(color = colorResource(R.color.subtitle_gray)))
     }
 }
@@ -236,9 +238,9 @@ fun GridChartDisplay(
             horizontalArrangement = Arrangement.spacedBy(20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            GridChartLegendEntry(colorResource(R.color.accent_yellow), "Straight posture")
-            GridChartLegendEntry(colorResource(R.color.dark_green), "Slouching")
-            GridChartLegendEntry(colorResource(R.color.light_mint), "No answer / skipped")
+            GridChartLegendEntry(colorResource(R.color.dark_green), "Straight posture")
+            GridChartLegendEntry(colorResource(R.color.accent_yellow), "Slouching")
+            GridChartLegendEntry(colorResource(R.color.dark_green), "No answer / skipped", fill = false)
         }
     }
 }

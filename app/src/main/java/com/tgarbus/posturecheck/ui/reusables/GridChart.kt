@@ -6,6 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.inset
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.drawText
@@ -52,7 +54,8 @@ data class GridChartColumnInput(
 }
 
 data class GridChartCircleSpec(
-    val color: Color
+    val color: Color,
+    val fill: Boolean = true,
 )
 
 data class GridChartHorizontalLineSpec(
@@ -157,7 +160,8 @@ fun GridChartOnCanvas(
                     drawCircle(
                         color = entry.color,
                         radius = maxCircleSize * 0.45f,
-                        center = Offset(x, y)
+                        center = Offset(x, y),
+                        style = if (entry.fill) Fill else Stroke(width = 6f)
                     )
                 }
             }
@@ -193,26 +197,38 @@ fun buildHorizontalGridChartSpec(
         ArrayList((0..<numRows).map { null })
     })
     val replyToColor = mapOf(
-        PostureCheckReply.GOOD to Color(context.getColor(R.color.accent_yellow)),
-        PostureCheckReply.BAD to Color(context.getColor(R.color.dark_green)),
-        PostureCheckReply.NOT_APPLICABLE to Color(context.getColor(R.color.light_mint)),
-        PostureCheckReply.NO_ANSWER to Color(context.getColor(R.color.light_mint)),
+        PostureCheckReply.GOOD to Color(context.getColor(R.color.dark_green)),
+        PostureCheckReply.BAD to Color(context.getColor(R.color.accent_yellow)),
+        PostureCheckReply.NOT_APPLICABLE to Color(context.getColor(R.color.dark_green)),
+        PostureCheckReply.NO_ANSWER to Color(context.getColor(R.color.dark_green)),
+    )
+    val replyToFill = mapOf(
+        PostureCheckReply.GOOD to true,
+        PostureCheckReply.BAD to true,
+        PostureCheckReply.NOT_APPLICABLE to false,
+        PostureCheckReply.NO_ANSWER to false,
     )
     for (col in 0..<numColumns) {
         val entriesBefore = columns[col].entriesBeforeTime(minTimeOfDay)
         for (i in 0..<entriesBefore.size) {
             val row = maxEntriesBeforeMinTime - entriesBefore.size + i
-            entries[col][row] = GridChartCircleSpec(color = replyToColor[entriesBefore[i].reply]!!)
+            entries[col][row] = GridChartCircleSpec(
+                color = replyToColor[entriesBefore[i].reply]!!,
+                fill = replyToFill[entriesBefore[i].reply]!!)
         }
         val entriesBetween = columns[col].entriesBetweenTimes(minTimeOfDay, maxTimeOfDay)
         for (i in 0..<entriesBetween.size) {
             val row = maxEntriesBeforeMinTime + i
-            entries[col][row] = GridChartCircleSpec(color = replyToColor[entriesBetween[i].reply]!!)
+            entries[col][row] = GridChartCircleSpec(
+                color = replyToColor[entriesBetween[i].reply]!!,
+                fill = replyToFill[entriesBetween[i].reply]!!)
         }
         val entriesAfter = columns[col].entriesAfterTime(maxTimeOfDay)
         for (i in 0..<entriesAfter.size) {
             val row = maxEntriesBeforeMinTime + maxEntriesBetweenLines + i
-            entries[col][row] = GridChartCircleSpec(color = replyToColor[entriesAfter[i].reply]!!)
+            entries[col][row] = GridChartCircleSpec(
+                color = replyToColor[entriesAfter[i].reply]!!,
+                fill = replyToFill[entriesAfter[i].reply]!!)
         }
     }
     return GridChartSpec(
