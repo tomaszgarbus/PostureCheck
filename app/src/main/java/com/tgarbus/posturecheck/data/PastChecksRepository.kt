@@ -90,6 +90,12 @@ class PastChecksRepository(private val context: Context) {
     }
   }
 
+  suspend fun updateResponse(pastPostureCheck: PastPostureCheck, newResponse: PostureCheckReply) {
+    context.pastChecksDataStore.edit { mutablePreferences ->
+      mutablePreferences[replyKey(pastPostureCheck.planned.id)] = newResponse.name
+    }
+  }
+
   private fun addPastCheckToPreferences(preferences: MutablePreferences, pastPostureCheck: PastPostureCheck) {
     preferences[millisKey(pastPostureCheck.planned.id)] = pastPostureCheck.planned.millis
     preferences[replyKey(pastPostureCheck.planned.id)] = pastPostureCheck.reply.name

@@ -126,10 +126,10 @@ fun Summary(answersDistribution: AnswersDistribution) {
         ) {
             SummaryEntry(
                 answersDistribution.percentGood(),
-                "Straight posture", colorResource(R.color.accent_yellow))
+                "Straight posture", colorResource(R.color.dark_green), textColor = Color.White)
             SummaryEntry(
                 answersDistribution.percentBad(),
-                "Slouching", colorResource(R.color.dark_green), textColor = Color.White)
+                "Slouching", colorResource(R.color.accent_yellow))
             SummaryEntry(answersDistribution.percentNoAnswer(),
                 "No answer", colorResource(R.color.light_mint))
         }

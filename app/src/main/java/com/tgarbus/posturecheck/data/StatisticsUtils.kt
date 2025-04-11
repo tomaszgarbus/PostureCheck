@@ -249,9 +249,6 @@ fun buildAnswersDistribution(pastPostureChecks: Collection<PastPostureCheck>): A
     for (check in pastPostureChecks) {
         counts[check.reply] = counts[check.reply]!! + 1
     }
-    if (counts[PostureCheckReply.GOOD]!! == 0) {
-        return null
-    }
     return AnswersDistribution(
         goodPostureCount = counts[PostureCheckReply.GOOD]!!,
         badPostureCount = counts[PostureCheckReply.BAD]!!,
@@ -325,7 +322,7 @@ fun buildAllTimeGridChartColumns(
     var i = 0
     while (day <= latestDay) {
         val column = GridChartColumnInput(
-            label = if (i % showLabelEveryNth == 0) day.toString() else null,
+            label = if (i % showLabelEveryNth == 0) day.toShortString() else null,
             entries = ArrayList(groupedByDay[day]?.map {
                 GridChartEntryInput(time = it.planned.getTimeOfDay(), reply = it.reply)
             } ?: arrayListOf())
