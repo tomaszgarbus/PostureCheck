@@ -186,7 +186,6 @@ fun recomputeNotificationsForDay(
     val cal = Calendar.getInstance()
     cal.timeInMillis = day.toMillis()
     for (i in 1..notificationsPerDay) {
-        // TODO: prevent duplicates or too close checks.
         var check = randomCheck(cal, range)
         for (j in 1..retriesPerNotification) {
             val satisfiesConstraints = checks.none {
