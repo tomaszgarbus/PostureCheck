@@ -6,8 +6,11 @@ import android.content.Intent
 import android.util.Log
 import com.tgarbus.posturecheck.data.Day
 import com.tgarbus.posturecheck.data.DefaultSettings
+import com.tgarbus.posturecheck.data.PastChecksRepository
+import com.tgarbus.posturecheck.data.PastPostureCheck
 import com.tgarbus.posturecheck.data.PlannedChecksRepository
 import com.tgarbus.posturecheck.data.PlannedPostureCheck
+import com.tgarbus.posturecheck.data.PostureCheckReply
 import com.tgarbus.posturecheck.data.SettingsRepository
 import com.tgarbus.posturecheck.data.TimeOfDay
 import com.tgarbus.posturecheck.data.validateNotificationsForDay
@@ -79,6 +82,7 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val plannedChecksRepo = PlannedChecksRepository(context)
+        val pastChecksRepo = PastChecksRepository(context)
         val settingsRepo = SettingsRepository(context)
         var oldPlannedChecks: Set<PlannedPostureCheck>? = null
         var notificationsPerDay = DefaultSettings.defaulNotificationsPerDay
@@ -110,6 +114,7 @@ class RecomputeNextNotificationsBroadcastReceiver : BroadcastReceiver() {
             if (!newPlannedChecks.contains(check) && !check.isToday()) {
                 runBlocking {
                     plannedChecksRepo.deletePlannedCheck(check)
+                    pastChecksRepo.addPastCheck(check.withReply(PostureCheckReply.NO_ANSWER))
                 }
             }
         }
