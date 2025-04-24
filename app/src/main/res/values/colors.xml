@@ -4,6 +4,9 @@
   <color name="light_mint">#EAF9F2</color>
   <color name="dark_green">#3C5343</color>
   <color name="accent_yellow">#FFF654</color>
+  <color name="good_posture">#FFF654</color>
+  <color name="bad_posture">#3C5343</color>
+  <color name="skipped_posture">#3C5343</color>
   <color name="spacer_grey">#CFCFCF</color>
   <color name="good_answer">#00ff00</color>
   <color name="bad_answer">#ff0000</color>

@@ -126,10 +126,10 @@ fun Summary(answersDistribution: AnswersDistribution) {
         ) {
             SummaryEntry(
                 answersDistribution.percentGood(),
-                "Straight posture", colorResource(R.color.dark_green), textColor = Color.White)
+                "Straight posture", colorResource(R.color.good_posture))
             SummaryEntry(
                 answersDistribution.percentBad(),
-                "Slouching", colorResource(R.color.accent_yellow))
+                "Slouching", colorResource(R.color.bad_posture), textColor = Color.White)
             SummaryEntry(answersDistribution.percentNoAnswer(),
                 "No answer", colorResource(R.color.light_mint))
         }
@@ -141,9 +141,9 @@ fun Summary(answersDistribution: AnswersDistribution) {
                 canvasModifier = Modifier.fillMaxSize(),
                 entries = listOf(
                     CircularGraphComponent(
-                        answersDistribution.percentGood(), colorResource(R.color.dark_green)),
+                        answersDistribution.percentGood(), colorResource(R.color.good_posture)),
                     CircularGraphComponent(
-                        answersDistribution.percentBad(), colorResource(R.color.accent_yellow)),
+                        answersDistribution.percentBad(), colorResource(R.color.bad_posture)),
                     CircularGraphComponent(
                         answersDistribution.percentNoAnswer(), colorResource(R.color.light_mint)),
                 ))
@@ -238,9 +238,9 @@ fun GridChartDisplay(
             horizontalArrangement = Arrangement.spacedBy(20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            GridChartLegendEntry(colorResource(R.color.dark_green), "Straight posture")
-            GridChartLegendEntry(colorResource(R.color.accent_yellow), "Slouching")
-            GridChartLegendEntry(colorResource(R.color.dark_green), "No answer / skipped", fill = false)
+            GridChartLegendEntry(colorResource(R.color.good_posture), "Straight posture")
+            GridChartLegendEntry(colorResource(R.color.bad_posture), "Slouching")
+            GridChartLegendEntry(colorResource(R.color.skipped_posture), "No answer / skipped", fill = false)
         }
     }
 }

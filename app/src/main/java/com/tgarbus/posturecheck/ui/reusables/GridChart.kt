@@ -197,10 +197,10 @@ fun buildHorizontalGridChartSpec(
         ArrayList((0..<numRows).map { null })
     })
     val replyToColor = mapOf(
-        PostureCheckReply.GOOD to Color(context.getColor(R.color.dark_green)),
-        PostureCheckReply.BAD to Color(context.getColor(R.color.accent_yellow)),
-        PostureCheckReply.NOT_APPLICABLE to Color(context.getColor(R.color.dark_green)),
-        PostureCheckReply.NO_ANSWER to Color(context.getColor(R.color.dark_green)),
+        PostureCheckReply.GOOD to Color(context.getColor(R.color.good_posture)),
+        PostureCheckReply.BAD to Color(context.getColor(R.color.bad_posture)),
+        PostureCheckReply.NOT_APPLICABLE to Color(context.getColor(R.color.skipped_posture)),
+        PostureCheckReply.NO_ANSWER to Color(context.getColor(R.color.skipped_posture)),
     )
     val replyToFill = mapOf(
         PostureCheckReply.GOOD to true,

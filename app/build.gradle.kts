@@ -11,8 +11,8 @@ android {
     applicationId = "com.tgarbus.posturecheck"
     minSdk = 26
     targetSdk = 34
-    versionCode = 4
-    versionName = "1.3"
+    versionCode = 7
+    versionName = "1.6"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     vectorDrawables {
